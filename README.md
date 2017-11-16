@@ -4,7 +4,7 @@
 
 ## Quick intro
 
-In this little intro I'll go about how to setup Supercollider to get Repetition.sc working as smoothly as possible
+In this little intro I'll go about how to setup Supercollider to get `Repetition.sc` working as smoothly as possible, there might be a couple of rough edges still and stuff that don't work properly (I hope not), so be patient and report an issue if that's the case :-) 
 
 ### Installation
 
