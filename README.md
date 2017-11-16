@@ -1,6 +1,84 @@
 # Repetition.sc
-
+    
 *Heavily* inspired by TidalCycles. Consider this a (tiny) dialect that implements some of its features.
+
+## Quick intro
+
+In this little intro I'll go about how to setup Supercollider to get Repetition.sc working as smoothly as possible
+
+### Installation
+
+Simply open a new document on your SC IDE and type:
+
+    Quarks.install("https://github.com/lvm/Repetition.sc");
+
+This should print something like this in the Post window:
+
+    Installing Repetition
+    Installing PercSymbol
+    PercSymbol installed
+    Installing FluidSynth
+    FluidSynth installed
+    Installing Bjorklund
+    Bjorklund installed
+    Repetition installed
+    -> Quark: Repetition[0.1]
+
+
+Notice: `FluidSynth` is not really a **dependency** and is useful only on GNU/Linux or macOS, but doesn't do any harm to have it installed.  
+There's a repo where I try to maintain most of the classes/stuff I regularly use with lots of goodies called [SuperUtilities](https://github.com/lvm/SuperUtilities/), once again, not a dependency either but brings to the table a couple useful helpers such as:
+
+* `ChordProg.sc`, a class with Chords, Progressions and some useful music theory stuff.
+* `Aconnect.sc`, an `aconnect` front end (GNU/Linux only).
+* `Tiny.sc`, a class to handle/autocomplete snippets.
+* `MidiEvents.sc`, Event types for MIDIOut patterns. Provides types `\md` and `\cc`.
+* `Tidal.sc`, a (really basic) `TidalCycles` interface.
+* `Pswing`, wrote by @[triss](https://github.com/triss/LiveCollider/blob/dev/patterns/classes/Pswing.sc) and lifted from Pattern Guide Cookbook 08: Swing.
+* `Pbindenmayer`, "Merge" a Pbind with a Prewrite.  
+* Various methods: 
+  * `.midiRange`, converts 0..1 to 0..127
+  * `.hexBeat`, based on [Steven Yi's Hex Beats](http://kunstmusik.com/2017/10/20/hex-beats/).  
+
+To install this, simply clone the repository to your `Platform.userExtensionDir`.
+
+### Getting started
+
+Once Repetition is properly installed and everything working correctly, in a _blank document_ type the following:
+    
+    // Create a Repetition instance, which will automatically boot the SuperCollider server + ProxySpace
+    r = Repetition.new;
+    // Init MIDIClient if not running, and create MIDIOut instance which is assigned to `m`
+    m = r.initMIDI("LoopBe Internal MIDI", "LoopBe Internal MIDI");
+    // Init SuperDirt with pretty much default settings, except it starts with 8 orbits (4 stereo) instead of just 2 and assign it to `d`
+    d = r.initSuperDirt;
+
+    // Now we can use the MidiEvents class with our MIDIOut instance and create these shortcuts for MIDI Events
+    MidiEvents(m);
+    
+    // Also, if we want to create a custom effect for SuperDirt, we can because we "saved" that SuperDirt instance in `d`
+    (
+    d.addModule('wah', {
+        |dirtEvent|
+        dirtEvent.sendSynth('dirt_wah' ++ d.numChannels,
+          [
+            wah: ~wah,
+            out: ~out
+          ]
+        )
+      }, { ~wah.notNil });
+      SynthDef("dirt_wah" ++ d.numChannels, {
+        |out, wah|
+        var sig;
+        sig = In.ar(out, d.numChannels);
+        sig = LPF.ar(sig, LinExp.ar(SinOsc.ar(wah.clip(0.01, 50)), -1, 1, 40, 19500));
+        ReplaceOut.ar(out, sig);
+      }).add;
+    )
+
+
+So, pretty much that's it.
+ 
+## The *language*
 
 So far, i've implemented only these possibilities:
 
@@ -12,7 +90,7 @@ So far, i've implemented only these possibilities:
 
 All of this is "chainable".
 
-## Examples
+### Examples
 
 A fairly complex pattern (polyrhythms)
 
@@ -108,9 +186,9 @@ Another example using `ChordProg`. Patterns can be built from arrays aswell.
         )
 
 
-## Other features
+### Other features
 
-### Callbacks
+#### Callbacks
 
 It affects the current event (from pattern) and applies a certain function:
 
@@ -141,7 +219,7 @@ Or
 In this particular case, the function will add a number between 12 and 24 to the current midinote". Also notice `octave: 0`. That is because, again, in this particular case, it's a Event type MIDI and it'll add automatically `octave: 5`, so 36 (bd) instead of ending between 48 and 60, would end between 108 and 120 (`octave: 5` equals to `current-note + 12*Pkey(\octave)`).
 
 
-### Bjorklund / Euclidean Rhythm:
+#### Bjorklund / Euclidean Rhythm:
 
 Repetition isn't flexible as Tidal itself but taking advantage of the `Bjorklund` Quark, we are able to generate Strings that represent the same rhythm. The valid args are `k` which represents the amount of notes distributed in `n` places, and `rotate` which will shift positions.  
 For example:
@@ -179,6 +257,9 @@ An example chaining Bjorklund/Euclidean rhythms:
         ~t84 = t8.at(4).asPbind(pbd);
         )
 
+## Contributing
+
+Bug reports and pull requests are welcome on GitHub at https://github.com/lvm/Repetition.sc. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## LICENSE
 
