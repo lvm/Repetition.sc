@@ -224,6 +224,9 @@ Repetition {
     dirt.start(57120, (0!8));
     SuperDirt.default = dirt;
 
+    // "fake" hackish synthdef for SuperDirt
+    SynthDef(\rest, { |out| Silent.ar(0); }).add;
+
     ^dirt;
   }
 
