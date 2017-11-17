@@ -1,25 +1,16 @@
 class:: Prepetition
-summary:: (put short description here)
+summary:: Magical Routine Pattern
 categories:: Live Coding
-related:: Classes/Repetition
+related:: Classes/Repetition, Streams-Patterns-Events>Patterns>Function
 
 DESCRIPTION::
-(put long description here)
+
+It shouldn't (could but I wouldn't recommend it) be used in the wild, since it's tightly built to be used with link::Classes/Repetition::.
+It defines a bunch of arguments for the current event such as code::octave::, code::stut::, code::amp::, code::dur::, code::midinote:: or code::note:: or code::s:: or code::n:: (these depend on the link::Classes/Event:: code::type::).
 
 
 CLASSMETHODS::
 
 METHOD:: new
-(describe method here)
 
-returns:: (describe returnvalue here)
-
-
-INSTANCEMETHODS::
-
-
-EXAMPLES::
-
-code::
-(some example code)
-::
+returns:: link::Classes/Prout:
