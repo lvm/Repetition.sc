@@ -1,10 +1,10 @@
-TITLE:: Repetition
-summary:: A (tiny) dialect for building patterns, *heavily* inspired by TidalCycles. 
-categories:: Undocumented classes
-related:: Classes/SomeRelatedClass, Reference/SomeRelatedStuff, etc.
+class:: Repetition
+summary:: A (tiny) dialect for building patterns, *heavily* inspired by TidalCycles.
+categories:: Live Coding
+related:: Classes/Prepetition
 
 DESCRIPTION::
-A (tiny) dialect for building patterns, *heavily* inspired by TidalCycles. 
+A (tiny) dialect for building patterns, *heavily* inspired by TidalCycles.
 
 So far, I've implemented only these possibilities:
 
@@ -233,16 +233,6 @@ var t8 = pat.parseRepetitionPattern;
 
 CLASSMETHODS::
 
-METHOD:: srv
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: ps
-(describe method here)
-
-returns:: (describe returnvalue here)
-
 METHOD:: new
 (describe method here)
 
@@ -254,11 +244,6 @@ returns:: (describe returnvalue here)
 
 INSTANCEMETHODS::
 
-METHOD:: initSuperDirt
-(describe method here)
-
-returns:: (describe returnvalue here)
-
 METHOD:: start
 (describe method here)
 
@@ -266,6 +251,13 @@ ARGUMENT:: default_tempo
 (describe argument here)
 
 returns:: (describe returnvalue here)
+
+
+METHOD:: initSuperDirt
+(describe method here)
+
+returns:: (describe returnvalue here)
+
 
 METHOD:: initMIDI
 (describe method here)

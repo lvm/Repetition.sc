@@ -1,7 +1,7 @@
-TITLE:: Prepetition
+class:: Prepetition
 summary:: (put short description here)
-categories:: Undocumented classes
-related:: Classes/SomeRelatedClass, Reference/SomeRelatedStuff, etc.
+categories:: Live Coding
+related:: Classes/Repetition
 
 DESCRIPTION::
 (put long description here)
