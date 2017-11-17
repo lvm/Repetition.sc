@@ -1,0 +1,271 @@
+class:: Repetition
+summary:: A (tiny) dialect for building patterns, *heavily* inspired by TidalCycles.
+categories:: Live Coding
+related:: Classes/Prepetition
+
+DESCRIPTION::
+A (tiny) dialect for building patterns, *heavily* inspired by TidalCycles.
+
+So far, I've implemented only these possibilities:
+
+LIST::
+## Polyrhythms: code::"a | b"::
+## Groups: code::"a+b"::
+## Accents: code::"a@"::
+## Repetition: code::"a!"::
+## Multiplication: code::"`a*N`":: (teletype::N -> Int::)
+::
+
+All of this is "chainable".
+
+SUBSECTION:: Quickstart
+
+A fairly complex pattern:
+
+code::
+"bd*3 | hq@+sn rm@! cp@".parseRepetitionPattern;
+::
+
+Is converted to:
+
+code::
+-> [
+    ( 'pattern': [ bd, bd, bd ],
+      'accent': [ 0, 0, 0 ],
+      'time': [ 0.33333333333333, 0.33333333333333, 0.33333333333333 ]
+    ),
+    ( 'pattern': [ hq, sn, rm, rm, cp ],
+      'accent': [ 0.25, 0, 0.25, 0.25, 0.25 ],
+      'time': [ 0.125, 0.125, 0.25, 0.25, 0.25 ]
+    )
+   ]
+::
+
+A polymeter:
+
+code::
+x = "5@ x*4 | 4@ x*3".parseRepetitionPattern
+::
+
+code::
+-> [
+    ( 'pattern': [ 5, x, x, x, x ],
+      'accent': [ 0.25, 0, 0, 0, 0 ],
+      'time': [ 0.2, 0.2, 0.2, 0.2, 0.2 ]
+    ),
+    ( 'pattern': [ 4, x, x, x ],
+      'accent': [ 0.25, 0, 0, 0 ],
+      'time': [ 0.25, 0.25, 0.25, 0.25 ]
+    )
+   ]
+::
+
+To "see" what's going on, it's possible to:
+
+code::
+x[0].pattern.dup(4).flat;
+x[1].pattern.dup(5).flat;
+//-> [ 5, x, x, x, x, 5, x, x, x, x, 5, x, x, x, x, 5, x, x, x, x ]
+//-> [ 4, x, x, x, 4, x, x, x, 4, x, x, x, 4, x, x, x, 4, x, x, x ]
+::
+
+A simple link::Classes/Pbind:::
+
+code::
+(
+var notes = "0 0+3 7".parseRepetitionPattern;
+~x = notes.at(0).asPbind((tempo: 60/60, type: \md, chan: 2, amp: 0.75));
+)
+::
+
+That is equivalent to:
+
+code::
+(
+var notes = "0 0+3 7".parseRepetitionPattern.pop;
+~x = Pbind(
+  \tempo, 60/60,
+  \type, \md,
+  \amp, Pseq(notes.amp, inf) + 0.75,
+  \dur, Pseq(notes.time, inf),
+  \midinote, Pseq(notes.pattern.collect(_.asInt), inf) + 60,
+  \sustain, Pkey(\dur),
+  \chan, 2,
+);
+)
+::
+
+Another a bit more complex link::Classes/Pbind:: example:
+
+code::
+(
+var pbd = (tempo: 60/60, type: \md, amp: 0.5);
+var drum = pbd.blend((chan: 9, cb: \asPerc));
+var test = "bd sn | ch*3 | 0@ 4 7 0 9 0".parseRepetitionPattern;
+~q = test.at(0).asPbind(drum.blend((stut: 2)));
+~w = test.at(1).asPbind(drum.blend((stretch: Pseq([1,1/4,1/2,2].stutter(4),inf))));
+~e = test.at(2).asPbind(pbd.blend((chan: 4, octave: Pseq([3,4,5],inf), cb: \asInt, amp: 0.7)));
+)
+::
+
+In which I defined a dict, code::pbd::, which later is blended with
+code::drum:: another dict which defines a midi channel. Later on, code::drum::
+is blended once again with different settings, once using code::stut:: that
+internally is translated to a link::Classes/Pstutter:: and the other uses
+code::\stretch:: that modifies the value of code::\dur:: (0.3, 0.075, 0.15,
+0.6) repeated 4 times each.  Also, a _bass_ midi-synth is defined with
+code::octave:: which cycles twice in the same pattern: 0/3, 4/4, 7/5, 0/3, 9/4,
+0/5.  Finally, each dict has code::cb::, which is basically a _callback_ over
+the current note being played.
+
+Another example using link::Classes/ChordProg::. Patterns can be built from arrays
+as well.
+
+code::
+(
+var chord = (
+  \c: \min,
+  \gs: \maj,
+  \a: \min,
+);
+var p = [\c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \a, \gs, \a, \gs, \a, \gs, \a, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \a, \gs, \a, \gs, \a, \gs, \a, \gs, \a, \gs, \a, \gs, \a, \gs, \a, \gs, \a].collect{
+  |n|
+  ChordProg.getChord(n, chord[n])
+}.flat.join(" ");
+var pbd = (tempo: 60/60, cb: \asInt, chan: 4, stretch: 26, type: \md, amp: 0.8);
+var polc = p.parseRepetitionPattern;
+~poly = polc.at(0).asPbind(pbd);
+)
+::
+
+SUBSECTION:: Callbacks
+
+It affects the current event (from pattern) and applies a certain function:
+
+LIST::
+## code::\asInt::, converts to integer
+## code::\asPerc::, converts to midi note. See link::Classes/PercSymbol:: for more info
+## code::\asChord::, which takes an additional argument code::\chord::
+## code::\asSynth::, which should be used with code::\type::, code::\dirt::, otherwise the value will be passed as code::\note::
+## code::\asFn::, which takes an additiona arg code::\fn:: (which should be a function)
+::
+
+code::
+(
+var pbd = (tempo: 60/60, octave: 5, type: \md, amp: 0.5);
+var ccc = "c d e".parseRepetitionPattern;
+~ccc = ccc.at(0).asPbind(pbd.blend((chan: 4, cb: \asChord, chord: Pseq([\min,\maj,\maj7],inf))));
+)
+::
+
+Which will be rendered as:
+
+teletype::Cmin, DMaj, EMaj7::
+
+code::
+(
+var pbd = (tempo: 60/60, octave: 5, type: \md, amp: 0.5);
+var fun = "bd".parseRepetitionPattern;
+~fun = fun.at(0).asPbind(pbd.blend((chan: 9, cb: \asFn, fn: {|x| [x].asGMPerc + (12..24).choose }, octave: 0)));
+)
+::
+
+Which will add a number between 12 and 24 to the current midinote.  Also notice
+code::octave: 0::.  That is because in this particular case, since it's a Event
+type MIDI, it'll add automatically code::octave: 5::, so 36 (bd) instead of
+ending between 48 and 60, it would end between 108 and 120 (code::octave: 5::
+equals to current-note + code::12*Pkey(\octave))::.
+
+SUBSECTION:: Bjorklund / Euclidean Rhythm
+
+Repetition isn't flexible as Tidal itself but taking advantage of the
+link::Classes/Bjorklund:: Quark, we are able to generate Strings that represent the
+same rhythm. The valid args are code::k:: which represents the amount of notes
+distributed in code::n:: places, and code::rotate:: which will shift positions.
+
+For example:
+
+code::
+"bd".asBjorklund(4, 16).quote;
+//=> "bd r r r bd r r r bd r r r bd r r r"
+::
+
+code::
+"bd".asBjorklund(4, 16, 2).quote;
+//=> "r r bd r r r bd r r r bd r r r bd r"
+::
+
+Additionally, it's possible to pass more than one 'symbol' as a Bjorklund
+pattern, such as "sn rm", which is converted to a group, "sn+rm", therefore
+creating a _longer_ pattern but maintaining the same duration.
+
+For example:
+
+code::
+"bd sn".asBjorklund(1,4).parseRepetitionPattern
+//=> "bd+sn r r r"
+//=> [
+//    ( 'pattern': [ bd, sn, r, r, r ],
+//      'time': [ 0.125, 0.125, 0.25, 0.25, 0.25 ],
+//      'accent': [ 0, 0, 0, 0, 0 ]
+//    )
+//   ]
+::
+
+So, instead of dividing each value by the total amount (1/5), it's divided by
+1/4 and the group by the amount of items in it (1/2). This can be seen clearly
+in the 'time' Array.
+
+An example chaining Bjorklund/Euclidean rhythms:
+
+code::
+(
+var pbd = (tempo: 60/60, type: \md, amp: 0.75, chan: 9, cb: \asPerc);
+var pat = ("bd".asBjorklund(3,8))+"| r r r sn r r | r ch ch@ ch |"+("rm".asBjorklund(5,8))+"|cp";
+var t8 = pat.parseRepetitionPattern;
+~t80 = t8.at(0).asPbind(pbd);
+~t81 = t8.at(1).asPbind(pbd);
+~t82 = t8.at(2).asPbind(pbd);
+~t83 = t8.at(3).asPbind(pbd);
+~t84 = t8.at(4).asPbind(pbd);
+)
+::
+
+CLASSMETHODS::
+
+METHOD:: new
+(describe method here)
+
+ARGUMENT:: default_tempo
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+
+INSTANCEMETHODS::
+
+METHOD:: start
+(describe method here)
+
+ARGUMENT:: default_tempo
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+
+METHOD:: initSuperDirt
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+
+METHOD:: initMIDI
+(describe method here)
+
+ARGUMENT:: dev
+(describe argument here)
+
+ARGUMENT:: port
+(describe argument here)
+
+returns:: (describe returnvalue here)

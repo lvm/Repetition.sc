@@ -1,0 +1,25 @@
+class:: Prepetition
+summary:: (put short description here)
+categories:: Live Coding
+related:: Classes/Repetition
+
+DESCRIPTION::
+(put long description here)
+
+
+CLASSMETHODS::
+
+METHOD:: new
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+
+INSTANCEMETHODS::
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::
