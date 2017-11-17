@@ -179,7 +179,7 @@ equals to current-note + code::12*Pkey(\octave))::.
 SUBSECTION:: Bjorklund / Euclidean Rhythm
 
 Repetition isn't flexible as Tidal itself but taking advantage of the
-link::Classes/Bjorklund:: Quark, we are able to generate Strings that represent the
+link::Classes/Bjorklund:: Quark, we are able to generate a link::Classes/String:: that represent the
 same rhythm. The valid args are code::k:: which represents the amount of notes
 distributed in code::n:: places, and code::rotate:: which will shift positions.
 
@@ -234,38 +234,39 @@ var t8 = pat.parseRepetitionPattern;
 CLASSMETHODS::
 
 METHOD:: new
-(describe method here)
+Creates a Repetition instance, which will automatically boot the link::Classes/Server:: + link::Classes/ProxySpace::
 
 ARGUMENT:: default_tempo
-(describe argument here)
+Defines the tempo clock for link::Classes/ProxySpace::
 
-returns:: (describe returnvalue here)
+returns:: link::Classes/Repetition::
 
 
 INSTANCEMETHODS::
 
 METHOD:: start
-(describe method here)
+Creates a Repetition instance, which will automatically boot the link::Classes/Server:: + link::Classes/ProxySpace::
 
 ARGUMENT:: default_tempo
-(describe argument here)
+Defines the tempo clock for link::Classes/ProxySpace::
 
-returns:: (describe returnvalue here)
+returns:: link::Classes/Repetition::
 
 
 METHOD:: initSuperDirt
 (describe method here)
+Starts link::Classes/SuperDirt:: with pretty much default settings, except it starts with 8 orbits (4 stereo) instead of just 2
 
-returns:: (describe returnvalue here)
+returns:: link::Classes/SuperDirt::
 
 
 METHOD:: initMIDI
-(describe method here)
+Starts link::Classes/MIDIClient:: if not running, and creates link::Classes/MIDIOut:: instance
 
 ARGUMENT:: dev
-(describe argument here)
+Device name. See link::Classes/MIDIOut.newByName::
 
 ARGUMENT:: port
-(describe argument here)
+Port name. See link::Classes/MIDIOut.newByName::
 
-returns:: (describe returnvalue here)
+returns:: link::Classes/MIDIOut::
