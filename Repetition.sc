@@ -23,18 +23,18 @@ Repetition {
 
 
   *new {
-    |default_tempo=2| // 120 BPM.
+    |default_tempo=2, quant=1| // 120 BPM.
 
     if(itself.isNil){
       itself = super.new;
-      itself.start(default_tempo);
+      itself.start(default_tempo, quant);
     }
 
     ^itself;
   }
 
   start {
-    |default_tempo|
+    |default_tempo, quant|
 
 		srv = Server.default;
     srv.options.numBuffers = 1024 * 64;
@@ -49,6 +49,7 @@ Repetition {
     ps = ProxySpace.push(srv);
     ps.makeTempoClock;
     ps.clock.tempo = default_tempo;
+    ps.quant = quant;
 
     "-> Repetition Loaded".postln;
   }
@@ -67,12 +68,12 @@ Repetition {
   }
 
   initMIDI {
-    |dev, port|
+    |dev, port, latency = 0.25|
     var mout;
     if (MIDIClient.initialized.not) {
       MIDIClient.init;
     }
-    ^MIDIOut.newByName(dev, port);
+    ^MIDIOut.newByName(dev, port).latency = (latency);
   }
 
 }
@@ -87,14 +88,9 @@ Prepetition {
 
       while { evt.notNil } {
         var current = evt[\pattern].at(idx).asSymbol;
+        var to = evt[\to] ?? \midinote;
         var isPerc = false;
         var isSynth = false;
-
-        if (evt[\cb].notNil) {
-          current = current.applyCallback(evt[\cb], evt);
-          isPerc = evt[\cb].asSymbol == \asPerc;
-          isSynth = evt[\cb].asSymbol == \asSynth;
-        };
 
         if (evt[\octave].isNil) {
           evt[\octave] = 5;
@@ -104,9 +100,18 @@ Prepetition {
           evt[\stut] = 1;
         };
 
+        if (evt[\cb].notNil) {
+          current = current.applyCallback(evt[\cb], evt);
+          isPerc = evt[\cb].asSymbol == \asPerc;
+          isSynth = evt[\cb].asSymbol == \asSynth;
+        };
+
         evt[\dur] = evt[\time].at(idx);
         evt[\amp] = evt[\amp] + evt[\accent].at(idx);
 
+        evt[to] = current + (if ((to.asSymbol == \midinote) && (isPerc.asBoolean == false)) { 12*evt[\octave] } { 0 });
+
+/*
         if ((evt[\type].asSymbol == \midi) || (evt[\type].asSymbol == \md)) {
           evt[\midinote] = current + (if(isPerc.asBoolean == false) { 12*evt[\octave] } { 0 });
         } {
@@ -120,6 +125,7 @@ Prepetition {
             evt[\note] = current;
           }
         };
+*/
 
         if (idx+1 < len) {
           idx = idx + 1;
@@ -160,6 +166,8 @@ Prepetition {
   applyCallback {
     |cb evt|
     var sym = this;
+    var chromatic = (\c: 0, \cs: 1, \db: 1, \d: 2, \ds:3, \eb: 3, \e: 4, \f:5, \fs:6, \gb: 6, \g:7, \gs:8, \ab: 8, \a:9, \as:10, \bb: 10, \b:11);
+    var octave = evt[\octave];
 
     switch (cb.asSymbol,
       \asInt, {
@@ -173,13 +181,21 @@ Prepetition {
           sym = [sym].asChord(evt[\chord] ?? \maj).flat;
         }
       },
+      \asSemitone, {
+        var st = chromatic[sym.asSymbol];
+        sym = st ?? 0;
+      },
+      \asFreq, {
+        var st = chromatic[sym.asSymbol];
+        sym = ((st ?? 0) + (12 * octave)).midicps;
+      },
       // Requires `PercSymbol`
       \asPerc, {
         sym = [sym].asGMPerc;
       },
       \asFn, {
         if (evt[\fn].notNil) {
-          sym = evt[\fn].value(sym);
+          sym = evt[\fn].value(sym, evt);
         }
       }
     );
@@ -215,7 +231,6 @@ Prepetition {
 
     ^item.asSymbol;
   }
-
 
   maybeSplit {
     |sep|
@@ -307,6 +322,14 @@ Prepetition {
   asPbind {
     |dict|
     ^Pchain(Prepetition(), Pbind(*this.blend(dict).getPairs));
+  }
+
+}
+
++ Array {
+
+  drawPattern {
+    ^this.collect{ |each| each.pattern.collect{ |p| if (p.isRest) { "." } { "x" } }.join(" ") }.join("\n");
   }
 
 }
