@@ -138,6 +138,20 @@ var polc = p.parseRepetitionPattern;
 )
 ::
 
+SUBSECTION:: Backend
+
+Originally, it would try to guess where to send the current value, for example, if we were using an Event type code::\midi:, it would send the current value to code::\midinote:, if it were type code::\dirt: and code::\cb, \asSynth: would sent it to code::\s:, etc. The original code it's still there, just in case.
+Now it's required to pass an extra argument to the Pbind called code::\to:. This way it's easier to specify where to send the current value.
+
+For example, we can use C3, C4, C5 as the frequencies to pass to an imaginary LPF Filter via MIDI CC.
+code::
+(
+var pbd = (chan:7, cb:\asFreq, to:\control, tempo: 60/60, octave: Pseq([3,4,5],inf), type: \cc, amp: 1);
+var fun = "c".parseRepetitionPattern;
+~fun = fun.at(0).asPbind(pbd);
+)
+::
+
 SUBSECTION:: Callbacks
 
 It affects the current event (from pattern) and applies a certain function:
@@ -147,7 +161,9 @@ LIST::
 ## code::\asPerc::, converts to midi note. See link::Classes/PercSymbol:: for more info
 ## code::\asChord::, which takes an additional argument code::\chord::
 ## code::\asSynth::, which should be used with code::\type::, code::\dirt::, otherwise the value will be passed as code::\note::
-## code::\asFn::, which takes an additiona arg code::\fn:: (which should be a function)
+## code::\asFn::, which takes an additional arg code::\fn:: (which should be a function), which will receive two args: current perc value and the whole event
+## code::\asFreq::, which tries to convert a note (chromatic scale) to a frequency (using code::.midicps::)
+## code::\asSemitone::, which tries to convert a note (chromatic scale) to its semitone (code::0..12:)
 ::
 
 code::
@@ -239,6 +255,9 @@ Creates a Repetition instance, which will automatically boot the link::Classes/S
 ARGUMENT:: default_tempo
 Defines the tempo clock for link::Classes/ProxySpace::
 
+ARGUMENT:: quant
+Defines the quantization for link::Classes/ProxySpace::
+
 returns:: link::Classes/Repetition::
 
 
@@ -249,6 +268,9 @@ Creates a Repetition instance, which will automatically boot the link::Classes/S
 
 ARGUMENT:: default_tempo
 Defines the tempo clock for link::Classes/ProxySpace::
+
+ARGUMENT:: quant
+Defines the quantization for link::Classes/ProxySpace::
 
 returns:: link::Classes/Repetition::
 
@@ -264,9 +286,12 @@ METHOD:: initMIDI
 Starts link::Classes/MIDIClient:: if not running, and creates link::Classes/MIDIOut:: instance
 
 ARGUMENT:: dev
-Device name. See link::Classes/MIDIOut.newByName::
+Device name. See link::Classes/MIDIOut::
 
 ARGUMENT:: port
-Port name. See link::Classes/MIDIOut.newByName::
+Port name. See link::Classes/MIDIOut:
+
+ARGUMENT:: latency
+MIDI Latency. See link::Classes/MIDIOut::
 
 returns:: link::Classes/MIDIOut::
