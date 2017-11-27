@@ -36,7 +36,7 @@ Repetition {
   start {
     |default_tempo, quant|
 
-		srv = Server.default;
+    srv = Server.default;
     srv.options.numBuffers = 1024 * 64;
     srv.options.memSize = 8192 * 16;
     srv.options.maxNodes = 1024 * 32;
@@ -105,10 +105,15 @@ Prepetition {
           // isSynth = evt[\cb].asSymbol == \asSynth;
         };
 
-        evt[\dur] = evt[\time].at(idx);
-        evt[\amp] = evt[\amp] + evt[\accent].at(idx);
+        if (evt[\type] == \dirt) {
+          evt[\gain] = evt[\gain] ?? 0.9;
+          evt[\gain] = evt[\gain] + evt[\accent].at(idx);
+        } {
+          evt[\amp] = evt[\amp] + evt[\accent].at(idx);
+        };
 
         evt[to] = current + (if ((to.asSymbol == \midinote) && (isPerc.asBoolean == false)) { 12*evt[\octave] } { 0 });
+        evt[\dur] = evt[\time].at(idx);
 
 /*
         if ((evt[\type].asSymbol == \midi) || (evt[\type].asSymbol == \md)) {
