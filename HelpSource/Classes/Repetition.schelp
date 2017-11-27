@@ -12,8 +12,10 @@ LIST::
 ## Polyrhythms: code::"a | b"::
 ## Groups: code::"a+b"::
 ## Accents: code::"a@"::
+## Shift octave up: code::"a'"::
+## Shift octave down: code::"a,"::
 ## Repetition: code::"a!"::
-## Multiplication: code::"`a*N`":: (teletype::N -> Int::)
+## Multiplication: code::"a*N":: (teletype::N -> Int::)
 ::
 
 All of this is "chainable".
@@ -32,11 +34,13 @@ code::
 -> [
     ( 'pattern': [ bd, bd, bd ],
       'accent': [ 0, 0, 0 ],
-      'time': [ 0.33333333333333, 0.33333333333333, 0.33333333333333 ]
+      'time': [ 0.33333333333333, 0.33333333333333, 0.33333333333333 ],
+      'oct': [ 0, 0, 0 ],
     ),
     ( 'pattern': [ hq, sn, rm, rm, cp ],
       'accent': [ 0.25, 0, 0.25, 0.25, 0.25 ],
-      'time': [ 0.125, 0.125, 0.25, 0.25, 0.25 ]
+      'time': [ 0.125, 0.125, 0.25, 0.25, 0.25 ],
+      'oct': [ 0, 0, 0 ],
     )
    ]
 ::
@@ -51,11 +55,13 @@ code::
 -> [
     ( 'pattern': [ 5, x, x, x, x ],
       'accent': [ 0.25, 0, 0, 0, 0 ],
-      'time': [ 0.2, 0.2, 0.2, 0.2, 0.2 ]
+      'time': [ 0.2, 0.2, 0.2, 0.2, 0.2 ],
+      'oct': [ 0, 0, 0 ],
     ),
     ( 'pattern': [ 4, x, x, x ],
       'accent': [ 0.25, 0, 0, 0 ],
-      'time': [ 0.25, 0.25, 0.25, 0.25 ]
+      'time': [ 0.25, 0.25, 0.25, 0.25 ],
+      'oct': [ 0, 0, 0 ],
     )
    ]
 ::
@@ -140,8 +146,7 @@ var polc = p.parseRepetitionPattern;
 
 SUBSECTION:: Backend
 
-Originally, it would try to guess where to send the current value, for example, if we were using an Event type code::\midi:, it would send the current value to code::\midinote:, if it were type code::\dirt: and code::\cb, \asSynth: would sent it to code::\s:, etc. The original code it's still there, just in case.
-Now it's required to pass an extra argument to the Pbind called code::\to:. This way it's easier to specify where to send the current value.
+Originally, it would try to guess where to send the current value, for example, if we were using an Event type code::\midi::, it would send the current value to code::\midinote::. Now it's required to pass an extra argument to the Pbind called code::to::. This way it's easier to specify where to send the current value.
 
 For example, we can use C3, C4, C5 as the frequencies to pass to an imaginary LPF Filter via MIDI CC.
 code::
@@ -163,8 +168,11 @@ LIST::
 ## code::\asSynth::, which should be used with code::\type::, code::\dirt::, otherwise the value will be passed as code::\note::
 ## code::\asFn::, which takes an additional arg code::\fn:: (which should be a function), which will receive two args: current perc value and the whole event
 ## code::\asFreq::, which tries to convert a note (chromatic scale) to a frequency (using code::.midicps::)
-## code::\asSemitone::, which tries to convert a note (chromatic scale) to its semitone (code::0..12:)
+## code::\asSemitone::, which tries to convert a note (chromatic scale) to its semitone (code::0..12::)
 ::
+
+
+This example will play the following chords: teletype::Cmin, DMaj, EMaj7::
 
 code::
 (
@@ -174,9 +182,12 @@ var ccc = "c d e".parseRepetitionPattern;
 )
 ::
 
-Which will be rendered as:
 
-teletype::Cmin, DMaj, EMaj7::
+This other example, will add a number between 12 and 24 to the current midinote.  Also notice
+code::octave: 0::.  That is because in this particular case, since it's a Event
+type MIDI, it'll add automatically code::octave: 5::, so 36 (bd) instead of
+ending between 48 and 60, it would end between 108 and 120 (code::octave: 5::
+equals to current-note + code::12*Pkey(\octave))::.
 
 code::
 (
@@ -186,11 +197,6 @@ var fun = "bd".parseRepetitionPattern;
 )
 ::
 
-Which will add a number between 12 and 24 to the current midinote.  Also notice
-code::octave: 0::.  That is because in this particular case, since it's a Event
-type MIDI, it'll add automatically code::octave: 5::, so 36 (bd) instead of
-ending between 48 and 60, it would end between 108 and 120 (code::octave: 5::
-equals to current-note + code::12*Pkey(\octave))::.
 
 SUBSECTION:: Bjorklund / Euclidean Rhythm
 
@@ -289,7 +295,7 @@ ARGUMENT:: dev
 Device name. See link::Classes/MIDIOut::
 
 ARGUMENT:: port
-Port name. See link::Classes/MIDIOut:
+Port name. See link::Classes/MIDIOut::
 
 ARGUMENT:: latency
 MIDI Latency. See link::Classes/MIDIOut::

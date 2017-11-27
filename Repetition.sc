@@ -90,11 +90,10 @@ Prepetition {
         var current = evt[\pattern].at(idx).asSymbol;
         var to = evt[\to] ?? \midinote;
         var isPerc = false;
-        var isSynth = false;
+        // var isSynth = false;
 
-        if (evt[\octave].isNil) {
-          evt[\octave] = 5;
-        };
+        //if (evt[\octave].isNil) { }
+        evt[\octave] = (evt[\octave] ?? 5) + evt[\oct].at(idx);
 
         if (evt[\stut].isNil) {
           evt[\stut] = 1;
@@ -103,7 +102,7 @@ Prepetition {
         if (evt[\cb].notNil) {
           current = current.applyCallback(evt[\cb], evt);
           isPerc = evt[\cb].asSymbol == \asPerc;
-          isSynth = evt[\cb].asSymbol == \asSynth;
+          // isSynth = evt[\cb].asSymbol == \asSynth;
         };
 
         evt[\dur] = evt[\time].at(idx);
@@ -244,13 +243,14 @@ Prepetition {
   }
 
   distributeInTime {
-    var acc, size, dur, time;
+    var acc, size, dur, time, octave;
     var pattern = this.asString;
 
     pattern = pattern.split($ ).reject { |x| x.asString.size < 1 };
     size = pattern.size;
     dur = 1/size;
     pattern = pattern.collect(_.maybeSubdivide);
+    octave = pattern.collect{ |sub| if (sub.isKindOf(String)) { sub.maybeShiftOctave; } { sub.collect(_.maybeShiftOctave) } };
     time = pattern.collect{ |sub| if (sub.isKindOf(String)) { dur; } { (dur/sub.size).dup(sub.size); } };
     acc = pattern.collect{ |sub| if (sub.isKindOf(String)) { sub.maybeAccent; } { sub.collect(_.maybeAccent) } };
     pattern = pattern.collect{ |sub| if (sub.isKindOf(String)) { sub.maybeCleanUp; } { sub.collect(_.maybeCleanUp) } };
@@ -258,6 +258,7 @@ Prepetition {
     ^(
       accent: acc.flat,
       time: time.flat,
+      oct: octave.flat,
       pattern: pattern.flat,
     )
   }
@@ -281,11 +282,23 @@ Prepetition {
   }
 
   maybeCleanUp {
-    ^this.replace("@", "").asSymbol;
+    ^this
+    .replace("@", "")
+    .replace(",", "")
+    .replace("'", "")
+    .asSymbol;
   }
 
   maybeAccent {
     ^if (this.contains("@")) { 0.25 } { 0 }
+  }
+
+  maybeShiftOctave {
+    var oct = 0;
+    if (this.contains(",")) { oct = -1 };
+    if (this.contains("'")) { oct = 1 };
+
+    ^oct;
   }
 
   maybeSubdivide {
@@ -299,7 +312,7 @@ Prepetition {
   }
 
   parseRepetitionPattern {
-    var regexp = "([\\w!?@?\\+?(\\*\d+)? ]+)";
+    var regexp = "([\\w\\'\\,!?@?\\+?(\\*\d+)? ]+)";
 
     ^this
     .asString
