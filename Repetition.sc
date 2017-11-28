@@ -5,15 +5,6 @@
         http://cyberpunk.com.ar/
 
         *Heavily* inspired by TidalCycles. Consider this a (tiny) dialect that implements some of its features.
-
-        So far, i've implemented only these possibilities:
-        * Polyrhythms: "a | b"
-        * Groups: "a+b"
-        * Accents: "a@"
-        * Repetition: "a!"
-        * Multiplication: "a*N" (N -> Int)
-
-        All of this is "chainable".
 */
 
 Repetition {
@@ -187,7 +178,11 @@ Prepetition {
       },
       \asSemitone, {
         var st = chromatic[sym.asSymbol];
-        sym = st ?? 0;
+        if (st.isNil) {
+          sym = \rest;
+        } {
+          sym = st;
+        }
       },
       \asFreq, {
         var st = chromatic[sym.asSymbol];
