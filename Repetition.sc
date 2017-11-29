@@ -328,6 +328,11 @@ Prepetition {
     ;
   }
 
+  asRepetition {
+    |pbd|
+    ^this.parseRepetitionPattern.at(0).asPbind(pbd);
+  }
+
 }
 
 + Dictionary {
