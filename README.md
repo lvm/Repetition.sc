@@ -106,7 +106,7 @@ A more in-depth documentation is available in SCDoc formatm, browseable through 
     ( 'pattern': [ hq, sn, rm, rm, cp ],
       'accent': [ 0.25, 0, 0.25, 0.25, 0.25 ],
       'time': [ 0.125, 0.125, 0.25, 0.25, 0.25 ],
-      'oct': [ 0, 0, 0 ],
+      'oct': [ 0, 0, 0, 0, 0 ],
     )
    ]
 ```
