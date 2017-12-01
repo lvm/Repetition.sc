@@ -69,12 +69,12 @@ Repetition {
     SynthDef(\rest, { |out| Silent.ar(0); }).add;
 
     SynthDef(\bassy, {
-      |out=0, amp=0.9, gate=1, atk=0.01, sus=0.5, rel=2, lctf=1200, hctf=200, rq = 0.5, detune=0.01, accel=0.01, pan=0, freq|
+      |out=0, amp=0.9, gate=1, lctf=1200, hctf=200, rq=0.5, pan=0, freq|
       var sig, env;
       amp = amp*0.9;
       // env = EnvGen.ar(Env.perc(attackTime: atk, releaseTime: rel, level: amp), timeScale: sus, doneAction: 2);
       env = EnvGen.kr(Env.asr, gate, doneAction: 2);
-      sig = BHPF.ar(RLPF.ar(SawDPW.ar(freq * Line.kr(1,1+accel, sus+rel),1), lctf*env, rq), freq:hctf);
+      sig = BHPF.ar(RLPF.ar(SawDPW.ar(freq,1), lctf, rq), freq:hctf);
       sig = sig * env;
       OffsetOut.ar(out, Pan2.ar(sig, pan, amp));
     }, metadata: (credit: "http://github.com/lvm/balc")).add;
@@ -94,29 +94,44 @@ Repetition {
   }
 
   setupMIDI {
-    var keys, instruments, noteon, noteoff;
+    var keys, instruments, instcc, noteon, noteoff;
     // MIDIIn.connectAll;
     this.loadSynths;
 
     keys = Array.newClear(128);
     instruments = Array.newClear(3);
+    instcc = Array.newClear(3);
 
     instruments.put(0, \rest);
     instruments.put(1, \bassy);
     instruments.put(2, \fm);
 
+    instcc.put(0, ());
+    instcc.put(1, (\lctf: 86.midicps, \hctf: 55.midicps, \rq: [63.5].rangeMidi.pop));
+    instcc.put(2, (\carPartial: [127].rangeMidi, \modPartial: [127].rangeMidi, \detune: [12.7].rangeMidi));
+
     // handle noteon
     MIDIdef.noteOn(\on, {
       |val, num, chan, src|
-      var node;
+      var node, cc, args;
 
-      if ( instruments.at(chan).isNil.not ) {
+      if ( instruments.at(chan).notNil) {
+        cc = instcc.at(chan);
         node = keys.at(num);
         if (node.notNil, {
           node.release;
           keys.put(num, nil);
         });
-        node = Synth(instruments.at(chan), [\freq, num.midicps, \vel, val]);
+
+        if (chan == 1) {
+          args = [\freq, num.midicps, \lctf, cc[\lctf], \hctf, cc[\hctf], \rq, cc[\rq]];
+        };
+
+        if (chan == 2) {
+          args = [\freq, num.midicps, \carPartial, cc[\carPartial], \modPartial, cc[\modPartial], \detune, cc[\detune]];
+        };
+
+        node = Synth(instruments.at(chan), args);
         keys.put(num, node);
       }
     });
@@ -131,6 +146,19 @@ Repetition {
         keys.put(num, nil);
       });
     });
+
+    // handle control messages
+    // bassy
+    // lctf, hctf, rq
+    MIDIdef.cc(\ctrlbass1, { |val, num| instcc.at(1)[\lctf] = val.midicps; }, 20, 1);
+    MIDIdef.cc(\ctrlbass2, { |val, num| instcc.at(1)[\hctf] = val.midicps; }, 21, 1);
+    MIDIdef.cc(\ctrlbass2, { |val, num| instcc.at(1)[\rq] = [val].rangeMidi.pop.clip(0.05, 1) }, 22, 1);
+
+    // fm
+    // carPartial, modPartial, detune,
+    MIDIdef.cc(\ctrlfm1, { |val, num| instcc.at(2)[\carPartial] = [val].rangeMidi; }, 23, 2);
+    MIDIdef.cc(\ctrlfm2, { |val, num| instcc.at(2)[\modPartial] = [val].rangeMidi; }, 24, 2);
+    MIDIdef.cc(\ctrlfm3, { |val, num| instcc.at(2)[\detune] = [val].rangeMidi; }, 26, 2);
   }
 
 }
@@ -169,7 +197,7 @@ Prepetition {
           evt[\amp] = evt[\amp] + evt[\accent].at(idx);
         };
 
-        evt[to] = current + (if ((to.asSymbol == \midinote) && (isPerc.asBoolean == false)) { 12*evt[\octave] } { 0 });
+        evt[to] = current + (if (((to.asSymbol == \midinote) || (to.asSymbol == \control) )&& (isPerc.asBoolean == false)) { 12*evt[\octave] } { 0 });
         evt[\dur] = evt[\time].at(idx);
 
 /*
@@ -253,6 +281,9 @@ Prepetition {
       \asFreq, {
         var st = chromatic[sym.asSymbol];
         sym = ((st ?? 0) + (12 * octave)).midicps;
+      },
+      \asCC, {
+        sym = [sym.asFloat].midiRange;
       },
       // Requires `PercSymbol`
       \asPerc, {
@@ -378,7 +409,8 @@ Prepetition {
   }
 
   parseRepetitionPattern {
-    var regexp = "([\\w\\'\\,!?@?\\+?(\\*\d+)? ]+)";
+    // var regexp = "([\\w\\'\\,!?@?\\+?(\\*\d+)? ]+)";
+    var regexp = "([\\w\\.\\'\\,!?@?\\+?(\\*\d+)? ]+)";
 
     ^this
     .asString
