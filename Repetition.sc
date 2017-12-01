@@ -52,19 +52,85 @@ Repetition {
     dirt.start(57120, (0!8));
     SuperDirt.default = dirt;
 
-    // "fake" hackish synthdef for SuperDirt
-    SynthDef(\rest, { |out| Silent.ar(0); }).add;
-
     ^dirt;
   }
 
   initMIDI {
-    |dev, port, latency = 0.25|
+    |dev, port, latency|
     var mout;
     if (MIDIClient.initialized.not) {
       MIDIClient.init;
     }
-    ^MIDIOut.newByName(dev, port).latency = (latency);
+    ^MIDIOut.newByName(dev, port).latency = (latency ?? Server.default.latency);
+  }
+
+  loadSynths {
+    // "fake" hackish synthdef
+    SynthDef(\rest, { |out| Silent.ar(0); }).add;
+
+    SynthDef(\bassy, {
+      |out=0, amp=0.9, gate=1, atk=0.01, sus=0.5, rel=2, lctf=1200, hctf=200, rq = 0.5, detune=0.01, accel=0.01, pan=0, freq|
+      var sig, env;
+      amp = amp*0.9;
+      // env = EnvGen.ar(Env.perc(attackTime: atk, releaseTime: rel, level: amp), timeScale: sus, doneAction: 2);
+      env = EnvGen.kr(Env.asr, gate, doneAction: 2);
+      sig = BHPF.ar(RLPF.ar(SawDPW.ar(freq * Line.kr(1,1+accel, sus+rel),1), lctf*env, rq), freq:hctf);
+      sig = sig * env;
+      OffsetOut.ar(out, Pan2.ar(sig, pan, amp));
+    }, metadata: (credit: "http://github.com/lvm/balc")).add;
+
+    SynthDef(\fm, {
+      |out, amp=0.9, gate=1, atk=0.001, sus=1, accel, carPartial=1, modPartial=1, index=3, mul=0.25, detune=0.1, pan=0, freq|
+      var env, mod, car, sig;
+      amp = amp * 0.9;
+      // env = EnvGen.ar(Env.perc(atk, 0.999, 1, -3), timeScale: sus / 2, doneAction:2);
+      env = EnvGen.kr(Env.asr, gate, doneAction: 2);
+      mod = SinOsc.ar(freq * modPartial * Line.kr(1,1+accel, sus), 0, freq * index * LFNoise1.kr(5.reciprocal).abs);
+      car = SinOsc.ar(([freq, freq+detune] * carPartial) + mod,	0, mul);
+      sig = car * env;
+      OffsetOut.ar(out, Pan2.ar(sig, pan, amp));
+    }, metadata: (credit: "@munshkr")).add;
+
+  }
+
+  setupMIDI {
+    var keys, instruments, noteon, noteoff;
+    // MIDIIn.connectAll;
+    this.loadSynths;
+
+    keys = Array.newClear(128);
+    instruments = Array.newClear(3);
+
+    instruments.put(0, \rest);
+    instruments.put(1, \bassy);
+    instruments.put(2, \fm);
+
+    // handle noteon
+    MIDIdef.noteOn(\on, {
+      |val, num, chan, src|
+      var node;
+
+      if ( instruments.at(chan).isNil.not ) {
+        node = keys.at(num);
+        if (node.notNil, {
+          node.release;
+          keys.put(num, nil);
+        });
+        node = Synth(instruments.at(chan), [\freq, num.midicps, \vel, val]);
+        keys.put(num, node);
+      }
+    });
+
+    // handle noteoff
+    MIDIdef.noteOff(\off, {
+      |val, num, chan, src|
+      var node;
+      node = keys.at(num);
+      if (node.notNil, {
+        node.release;
+        keys.put(num, nil);
+      });
+    });
   }
 
 }
