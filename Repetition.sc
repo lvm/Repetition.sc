@@ -52,6 +52,9 @@ Repetition {
     dirt.start(57120, (0!8));
     SuperDirt.default = dirt;
 
+    // "fake" hackish synthdef
+    SynthDef(\rest, { |out| Silent.ar(0); }).add;
+
     ^dirt;
   }
 
@@ -62,103 +65,6 @@ Repetition {
       MIDIClient.init;
     }
     ^MIDIOut.newByName(dev, port).latency = (latency ?? Server.default.latency);
-  }
-
-  loadSynths {
-    // "fake" hackish synthdef
-    SynthDef(\rest, { |out| Silent.ar(0); }).add;
-
-    SynthDef(\bassy, {
-      |out=0, amp=0.9, gate=1, lctf=1200, hctf=200, rq=0.5, pan=0, freq|
-      var sig, env;
-      amp = amp*0.9;
-      // env = EnvGen.ar(Env.perc(attackTime: atk, releaseTime: rel, level: amp), timeScale: sus, doneAction: 2);
-      env = EnvGen.kr(Env.asr, gate, doneAction: 2);
-      sig = BHPF.ar(RLPF.ar(SawDPW.ar(freq,1), lctf, rq), freq:hctf);
-      sig = sig * env;
-      OffsetOut.ar(out, Pan2.ar(sig, pan, amp));
-    }, metadata: (credit: "http://github.com/lvm/balc")).add;
-
-    SynthDef(\fm, {
-      |out, amp=0.9, gate=1, atk=0.001, sus=1, accel, carPartial=1, modPartial=1, index=3, mul=0.25, detune=0.1, pan=0, freq|
-      var env, mod, car, sig;
-      amp = amp * 0.9;
-      // env = EnvGen.ar(Env.perc(atk, 0.999, 1, -3), timeScale: sus / 2, doneAction:2);
-      env = EnvGen.kr(Env.asr, gate, doneAction: 2);
-      mod = SinOsc.ar(freq * modPartial * Line.kr(1,1+accel, sus), 0, freq * index * LFNoise1.kr(5.reciprocal).abs);
-      car = SinOsc.ar(([freq, freq+detune] * carPartial) + mod,	0, mul);
-      sig = car * env;
-      OffsetOut.ar(out, Pan2.ar(sig, pan, amp));
-    }, metadata: (credit: "@munshkr")).add;
-
-  }
-
-  setupMIDI {
-    var keys, instruments, instcc, noteon, noteoff;
-    // MIDIIn.connectAll;
-    this.loadSynths;
-
-    keys = Array.newClear(128);
-    instruments = Array.newClear(3);
-    instcc = Array.newClear(3);
-
-    instruments.put(0, \rest);
-    instruments.put(1, \bassy);
-    instruments.put(2, \fm);
-
-    instcc.put(0, ());
-    instcc.put(1, (\lctf: 86.midicps, \hctf: 55.midicps, \rq: [63.5].rangeMidi.pop));
-    instcc.put(2, (\carPartial: [127].rangeMidi, \modPartial: [127].rangeMidi, \detune: [12.7].rangeMidi));
-
-    // handle noteon
-    MIDIdef.noteOn(\on, {
-      |val, num, chan, src|
-      var node, cc, args;
-
-      if ( instruments.at(chan).notNil) {
-        cc = instcc.at(chan);
-        node = keys.at(num);
-        if (node.notNil, {
-          node.release;
-          keys.put(num, nil);
-        });
-
-        if (chan == 1) {
-          args = [\freq, num.midicps, \lctf, cc[\lctf], \hctf, cc[\hctf], \rq, cc[\rq]];
-        };
-
-        if (chan == 2) {
-          args = [\freq, num.midicps, \carPartial, cc[\carPartial], \modPartial, cc[\modPartial], \detune, cc[\detune]];
-        };
-
-        node = Synth(instruments.at(chan), args);
-        keys.put(num, node);
-      }
-    });
-
-    // handle noteoff
-    MIDIdef.noteOff(\off, {
-      |val, num, chan, src|
-      var node;
-      node = keys.at(num);
-      if (node.notNil, {
-        node.release;
-        keys.put(num, nil);
-      });
-    });
-
-    // handle control messages
-    // bassy
-    // lctf, hctf, rq
-    MIDIdef.cc(\ctrlbass1, { |val, num| instcc.at(1)[\lctf] = val.midicps; }, 20, 1);
-    MIDIdef.cc(\ctrlbass2, { |val, num| instcc.at(1)[\hctf] = val.midicps; }, 21, 1);
-    MIDIdef.cc(\ctrlbass2, { |val, num| instcc.at(1)[\rq] = [val].rangeMidi.pop.clip(0.05, 1) }, 22, 1);
-
-    // fm
-    // carPartial, modPartial, detune,
-    MIDIdef.cc(\ctrlfm1, { |val, num| instcc.at(2)[\carPartial] = [val].rangeMidi; }, 23, 2);
-    MIDIdef.cc(\ctrlfm2, { |val, num| instcc.at(2)[\modPartial] = [val].rangeMidi; }, 24, 2);
-    MIDIdef.cc(\ctrlfm3, { |val, num| instcc.at(2)[\detune] = [val].rangeMidi; }, 26, 2);
   }
 
 }
@@ -175,7 +81,6 @@ Prepetition {
         var current = evt[\pattern].at(idx).asSymbol;
         var to = evt[\to] ?? \midinote;
         var isPerc = false;
-        // var isSynth = false;
 
         //if (evt[\octave].isNil) { }
         evt[\octave] = (evt[\octave] ?? 5) + evt[\oct].at(idx);
@@ -283,7 +188,7 @@ Prepetition {
         sym = ((st ?? 0) + (12 * octave)).midicps;
       },
       \asCC, {
-        sym = [sym.asFloat].midiRange;
+        sym = sym.asFloat.midirange;
       },
       // Requires `PercSymbol`
       \asPerc, {
@@ -461,6 +366,23 @@ Prepetition {
       }
     };
     ^result.asArray;
+  }
+
+}
+
+
++ Float {
+
+  midirange {
+    ^(127 * this).round;
+  }
+
+}
+
++ Integer {
+
+  rangemidi {
+    ^(this/127).asStringPrec(2);
   }
 
 }
