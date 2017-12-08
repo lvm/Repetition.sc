@@ -82,7 +82,6 @@ Prepetition {
         var to = evt[\to] ?? \midinote;
         var isPerc = false;
 
-        //if (evt[\octave].isNil) { }
         evt[\octave] = (evt[\octave] ?? 5) + evt[\oct].at(idx);
 
         if (evt[\stut].isNil) {
@@ -92,7 +91,6 @@ Prepetition {
         if (evt[\cb].notNil) {
           current = current.applyCallback(evt[\cb], evt);
           isPerc = evt[\cb].asSymbol == \asPerc;
-          // isSynth = evt[\cb].asSymbol == \asSynth;
         };
 
         if (evt[\type] == \dirt) {
@@ -314,7 +312,6 @@ Prepetition {
   }
 
   parseRepetitionPattern {
-    // var regexp = "([\\w\\'\\,!?@?\\+?(\\*\d+)? ]+)";
     var regexp = "([\\w\\.\\'\\,!?@?\\+?(\\*\d+)? ]+)";
 
     ^this
@@ -342,7 +339,24 @@ Prepetition {
 
   asPbind {
     |dict|
-    ^Pchain(Prepetition(), Pbind(*this.blend(dict).getPairs));
+    var pbindcc, cc = dict[\cc], pchain = Pchain(Prepetition(), Pbind(*this.blend(dict).getPairs));
+
+    if (cc.notNil) {
+      pbindcc = cc
+      .asDict.keys()
+      .collect {
+        |key|
+        var ctrl = cc[cc.indexOfEqual(key)+1];
+        Pbind(\type, \cc, \chan, dict[\chan], \dur, 1, \ctlNum, key, \control, ctrl);
+      }
+      .asArray
+      ;
+
+      ^Ppar(pbindcc ++ [pchain]);
+    } {
+      ^pchain;
+    }
+
   }
 
 }
