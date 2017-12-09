@@ -119,10 +119,21 @@ Prepetition {
         };
 */
 
-        if (idx+1 < len) {
-          idx = idx + 1;
-        } {
-          idx = 0;
+        evt[\sort] = evt[\sort] ?? \normal;
+        if (evt[\sort].asSymbol == \rand) { idx = len.rand.clip(0, len) };
+        if (evt[\sort].asSymbol == \rev) {
+          if (idx-1 > -1) {
+            idx = idx - 1;
+          } {
+            idx = len-1;
+          };
+        };
+        if (evt[\sort].asSymbol == \normal) {
+          if (idx+1 < len) {
+            idx = idx + 1;
+          } {
+            idx = 0;
+          };
         };
 
         evt = evt.yield;
