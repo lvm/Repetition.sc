@@ -53,7 +53,8 @@ Repetition {
     SuperDirt.default = dirt;
 
     // "fake" hackish synthdef
-    SynthDef(\rest, { |out| Silent.ar(0); }).add;
+    SynthDef(\r, {}).add;
+    SynthDef(\rest, {}).add;
 
     ^dirt;
   }
@@ -82,17 +83,19 @@ Prepetition {
         var to = evt[\to] ?? \midinote;
         var isPerc = false;
 
+
+        // "defaults"
+        evt[\stut] = evt[\stut] ?? 1;
+        evt[\dur] = evt[\time].at(idx);
         evt[\octave] = (evt[\octave] ?? 5) + evt[\oct].at(idx);
 
-        if (evt[\stut].isNil) {
-          evt[\stut] = 1;
-        };
-
+        // callbacks
         if (evt[\cb].notNil) {
           current = current.applyCallback(evt[\cb], evt);
           isPerc = evt[\cb].asSymbol == \asPerc;
         };
 
+        // amplitude / gain
         if (evt[\type] == \dirt) {
           evt[\gain] = evt[\gain] ?? 0.9;
           evt[\gain] = evt[\gain] + evt[\accent].at(idx);
@@ -100,25 +103,10 @@ Prepetition {
           evt[\amp] = evt[\amp] + evt[\accent].at(idx);
         };
 
+        // where to send the current evt
         evt[to] = current + (if (((to.asSymbol == \midinote) || (to.asSymbol == \control) )&& (isPerc.asBoolean == false)) { 12*evt[\octave] } { 0 });
-        evt[\dur] = evt[\time].at(idx);
 
-/*
-        if ((evt[\type].asSymbol == \midi) || (evt[\type].asSymbol == \md)) {
-          evt[\midinote] = current + (if(isPerc.asBoolean == false) { 12*evt[\octave] } { 0 });
-        } {
-          if (evt[\type].asSymbol == \dirt) {
-            if (isSynth.asBoolean) {
-              evt[\s] = current;
-            } {
-              evt[\n] = current;
-            }
-          } {
-            evt[\note] = current;
-          }
-        };
-*/
-
+        // pattern playing order
         evt[\sort] = evt[\sort] ?? \normal;
         if (evt[\sort].asSymbol == \rand) { idx = len.rand.clip(0, len) };
         if (evt[\sort].asSymbol == \rev) {
@@ -358,7 +346,7 @@ Prepetition {
       .collect {
         |key|
         var ctrl = cc[cc.indexOfEqual(key)+1];
-        Pbind(\type, \cc, \chan, dict[\chan], \dur, 1, \ctlNum, key, \control, ctrl);
+        Pbind(\type, \cc, \chan, dict[\chan], \dur, dict[\ccdur] ?? 1, \ctlNum, key, \control, ctrl);
       }
       .asArray
       ;
