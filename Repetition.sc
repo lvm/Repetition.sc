@@ -61,11 +61,31 @@ Repetition {
 
   initMIDI {
     |dev, port, latency|
-    var mout;
+    var outmidi;
     if (MIDIClient.initialized.not) {
       MIDIClient.init;
-    }
-    ^MIDIOut.newByName(dev, port).latency = (latency ?? Server.default.latency);
+    };
+    outmidi = MIDIOut.newByName(dev, port).latency = (latency ?? Server.default.latency);
+
+    Event.addEventType(\md, {
+      |server|
+      ~type = \midi;
+      ~midiout = outmidi;
+      ~chan = ~chan ?? 9;
+      ~amp = ~amp ?? 0.9;
+      currentEnvironment.play;
+    });
+
+    Event.addEventType(\cc, {
+      |server|
+      ~type = \midi;
+      ~midicmd = \control;
+      ~midiout = outmidi;
+      ~ctlNum = ~ctlNum ?? 23;
+      currentEnvironment.play;
+    });
+
+    ^outmidi;
   }
 
 }
