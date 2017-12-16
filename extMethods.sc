@@ -253,6 +253,32 @@
     ^result.asArray;
   }
 
+  asPseq {
+    |rep = inf, offs = 0|
+    ^Pseq(this, rep, offs);
+  }
+
+  asPshuf {
+    |rep = inf|
+    ^Pshuf(this, rep);
+  }
+
+  asPrand {
+    |rep = inf|
+    ^Prand(this, rep);
+  }
+
+  asPxrand {
+    |rep = inf|
+    ^Pxrand(this, rep);
+  }
+
+  asPwrand {
+    |weights, rep = inf|
+    weights = weights ?? [(1 / this.size) ! this.size].normalizeSum;
+    ^Pwrand(this, weights, rep);
+  }
+
 }
 
 

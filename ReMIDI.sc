@@ -1,44 +1,41 @@
 /*
         ReMIDI.sc
-        Part of the Repetition.sc project
+        MIDI Stuff, part of the Repetition.sc project
 */
 
-ReMIDI {
-  classvar cclist, ccfuncs;
++ Repetition {
 
-  *new {
-    ^this.run;
+  eventTypes {
+    |outmidi|
+
+    Event.addEventType(\md, {
+      |server|
+      ~type = \midi;
+      ~midiout = outmidi;
+      ~chan = ~chan ?? 9;
+      ~amp = ~amp ?? 0.9;
+      currentEnvironment.play;
+    });
+
+    Event.addEventType(\cc, {
+      |server|
+      ~type = \midi;
+      ~midicmd = \control;
+      ~midiout = outmidi;
+      ~ctlNum = ~ctlNum ?? 23;
+      currentEnvironment.play;
+    });
   }
 
-  *initClass{
-    cclist = (
-      \pitch1: 1,
-      \amp: 7,
-      \pan: 10,
-      \carPartial: 12,
-      \modPartial: 13,
-      \index: 14,
-      \mul: 15,
-      \lfo: 16,
-      \atk: 73,
-      \wave: 70,
-      \filter: 70,
-      \rq: 71,
-      \lctf: 74,
-      \hctf: 75,
-      \glitch: 85,
-      \reset: 86,
-      \fragment: 87,
-      \delay: 88,
-      \delaydecay: 89,
-      \mix: 90,
-      \room: 91,
-      \detune: 94,
-      \speed: 95,
-    );
+  midiSynthDefs {
+
+    var keys, instruments, ccinstruments, noteon, noteoff;
+    var ccfuncs;
+    var non, noff, ccr;
 
     ccfuncs = (
       \amp: {|vel| vel.linlin(0, 127, 0.001, 0.99); },
+      \sus: {|vel| vel.linlin(0, 127, 0, 0.99); },
       \pan: {|vel| vel.linlin(0, 127, -1, 1); },
       \wave: {|vel| vel },
       \glitch: {|vel| vel },
@@ -59,16 +56,16 @@ ReMIDI {
       \speed: {|vel|  var speed = vel.linlin(0, 127, 0, 10); if (speed < 1) { speed.asStringPrec(1).asFloat } { speed.round } },
       \mix: {|vel| vel.linlin(0, 127, 0.0, 0.99);},
       \room: {|vel| vel.linlin(0, 127, 0.0, 0.99);},
-    )
-  }
+    );
 
-  *loadSynthDefs {
+    SynthDef(\r, {}).add;
+    SynthDef(\rest, {}).add;
+
     SynthDef.new(\sample,
       {
         |
         out = 0, amp = 0.9, gate = 1, pan = 0.5,
-        index = 0,
-        speed = 1,
+        index = 0, speed = 1,
         glitch = 0, reset = 1, fragment = 0.1,
         filter = 0, lctf = 100, hctf = 1000,
         delay = 0, delaydecay = 0,
@@ -92,10 +89,8 @@ ReMIDI {
         Out.ar(out, Pan2.ar(smp, pan, amp))
     }).add;
 
-    SynthDef(\rest, { |out| Silent.ar(0); }).add;
-
     SynthDef(\sc303, {
-      |out=0, gate=1, wave=0, lctf=100, hctf=1000, rq=0.5, sus=0, dec=1.0, amp=0.9, pan=0.5, freq|
+      |out=0, gate=1, wave=0, lctf=100, hctf=1000, rq=0.5, sus=0.2, dec=1.0, amp=0.9, pan=0.5, freq|
       var  sig, env, filEnv, volEnv, waves;
       env = EnvGen.kr(Env.asr, gate, doneAction: 2);
       volEnv =  EnvGen .ar( Env .new([10e-10, 1, 1, 10e-10], [0.01, sus, dec],  \exp ), gate);
@@ -116,30 +111,24 @@ ReMIDI {
       OffsetOut.ar(out, Pan2.ar(sig, pan, amp));
     }, metadata: (credit: "@munshkr")).add;
 
-  }
-
-  *run {
-    var keys, instruments, cc, noteon, noteoff;
-    var non, noff, ccr;
-    // MIDIIn.connectAll;
-    this.loadSynthDefs;
-
     keys = Array.newClear(128);
     instruments = Array.newClear(4);
-    cc = Array.newClear(4);
+    ccinstruments = Array.newClear(4);
 
     instruments.put(0, \rest);
     instruments.put(1, \sc303);
     instruments.put(2, \scfm);
     instruments.put(3, \sample);
 
-    cc.put(0, ());
+    ccinstruments.put(0, ());
     // sc303
-    cc.put(1, (
+    ccinstruments.put(1, (
       // volume, cc7
       \amp: 0.9,
       // panning, cc10
       \pan: 0.5,
+      // sustain, cc10
+      \sus: 0.5,
       // wave, cc70
       \wave: 0,
       // resonance, cc71
@@ -151,7 +140,7 @@ ReMIDI {
     )
     );
     // scfm
-    cc.put(2, (
+    ccinstruments.put(2, (
       // volume, cc7
       \amp: 0.9,
       // panning, cc10
@@ -170,7 +159,7 @@ ReMIDI {
       \detune: 0.1,
     ));
     // samples
-    cc.put(3, (
+    ccinstruments.put(3, (
       // volume, cc7
       \amp: 0.9,
       // panning, cc10
@@ -212,7 +201,7 @@ ReMIDI {
           node.release;
           keys.put(note, nil);
         });
-        args = [\freq, note.midicps] ++ cc.at(ch).getPairs();
+        args = [\freq, note.midicps] ++ ccinstruments.at(ch).getPairs();
         node = Synth(instruments.at(ch), args);
         keys.put(note, node);
       }
@@ -242,10 +231,9 @@ ReMIDI {
     // handle CC
     ccr = CCResponder({
       |src, ch, num, value|
-      var key = cclist.findKeyForValue(num).asSymbol;
+      var key = this.cc(num).asSymbol;
       var func = ccfuncs.at(key);
-      // [src, ch, num, value].postln;
-      cc.at(ch)[key] = func.(value);
+      ccinstruments.at(ch)[key] = func.(value);
     },
     nil, // src
     nil, // chan
@@ -255,14 +243,45 @@ ReMIDI {
 
   }
 
-  *cc {
-    |key|
-    var ret;
+  cc {
+    |key=nil|
+    var ret, cclist;
 
-    if (cclist[key].isNil) {
+    cclist = (
+      \pitch1: 1,
+      \amp: 7,
+      \pan: 10,
+      \carPartial: 12,
+      \modPartial: 13,
+      \index: 14,
+      \mul: 15,
+      \lfo: 16,
+      \sus: 69,
+      \wave: 70,
+      \filter: 70,
+      \rq: 71,
+      \atk: 73,
+      \lctf: 74,
+      \hctf: 75,
+      \glitch: 85,
+      \reset: 86,
+      \fragment: 87,
+      \delay: 88,
+      \delaydecay: 89,
+      \mix: 90,
+      \room: 91,
+      \detune: 94,
+      \speed: 95,
+    );
+
+    if (key.isNil) {
       ret = cclist.keys();
     } {
-      ret = cclist[key];
+      if (key.isInteger) {
+        ret = cclist.findKeyForValue(key).asSymbol;
+      } {
+        ret = cclist[key];
+      }
     }
 
     ^ret;
