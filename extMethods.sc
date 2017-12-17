@@ -151,6 +151,7 @@
     .flat.join(" ")
     ;
   }
+  bj { |k n rot=0| ^this.asBjorklund(k, n, rot); }
 
   maybeCleanUp {
     ^this
@@ -203,6 +204,7 @@
     |pbd|
     ^this.parseRepetitionPattern.at(0).asPbind(pbd);
   }
+  rp { |pbd| ^this.asRepetition(pbd); }
 
 }
 
@@ -223,12 +225,13 @@
       .asArray
       ;
 
-      ^Ppar(pbindcc ++ [pchain]);
+      ^Ppar(pbindcc ++ pchain.asArray);
     } {
       ^pchain;
     }
 
   }
+  pb { |dict| ^this.asPbind(dict); }
 
 }
 
@@ -257,27 +260,33 @@
     |rep = inf, offs = 0|
     ^Pseq(this, rep, offs);
   }
+  ps { |rep=inf offs=0| ^this.asPseq(rep, offs) }
 
   asPshuf {
     |rep = inf|
     ^Pshuf(this, rep);
   }
+  psh { |rep=inf| ^this.asPshuf(rep) }
 
   asPrand {
     |rep = inf|
     ^Prand(this, rep);
   }
+  pr { |rep=inf| ^this.asPrand(rep) }
 
   asPxrand {
     |rep = inf|
     ^Pxrand(this, rep);
   }
+  px { |rep=inf| ^this.asPxrand(rep) }
 
   asPwrand {
     |weights, rep = inf|
     weights = weights ?? [(1 / this.size) ! this.size].normalizeSum;
     ^Pwrand(this, weights, rep);
   }
+  pw { |weights rep=inf| ^this.asPwrand(weights, rep) }
+
 
 }
 
