@@ -1,5 +1,5 @@
 /*
-        ReMIDI.sc
+        UGens for Synthdefs
         Part of the Repetition.sc project
 */
 

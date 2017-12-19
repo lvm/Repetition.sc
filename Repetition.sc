@@ -11,6 +11,7 @@ Repetition {
   classvar itself;
   classvar <srv;
   classvar <ps;
+  classvar <mout;
 
 
   *new {
@@ -65,7 +66,8 @@ Repetition {
     if (MIDIClient.initialized.not) {
       MIDIClient.init;
     };
-    ^MIDIOut.newByName(dev, port).latency = (latency ?? Server.default.latency);
+    mout = MIDIOut.newByName(dev, port).latency = (latency ?? Server.default.latency);
+    ^mout;
   }
 
 }

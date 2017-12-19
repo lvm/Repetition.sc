@@ -128,7 +128,7 @@
       // panning, cc10
       \pan: 0.5,
       // sustain, cc10
-      \sus: 0.5,
+      \sus: 0.009,
       // wave, cc70
       \wave: 0,
       // resonance, cc71
@@ -286,5 +286,8 @@
 
     ^ret;
   }
+
+  on { |chan  note vel=127| mout.noteOn(chan, note: note, veloc:vel); }
+  off { |chan| mout.allNotesOff(chan); }
 
 }

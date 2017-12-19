@@ -206,6 +206,12 @@
   }
   rp { |pbd| ^this.asRepetition(pbd); }
 
+  asGroupRepetition {
+    |pbd rep=inf|
+    ^Ppar(this.parseRepetitionPattern.collect{ |pat| pat.asPbind(pbd); }.asArray, rep);
+  }
+  grp { |pbd rep=inf| ^this.asGroupRepetition(pbd, rep); }
+
 }
 
 + Dictionary {
