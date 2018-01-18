@@ -90,7 +90,7 @@
     }).add;
 
     SynthDef(\sc303, {
-      |out=0, gate=1, wave=0, lctf=100, hctf=1000, rq=0.5, sus=0.09, dec=1.0, amp=0.9, pan=0.5, freq|
+      |out=0, gate=1, wave=0, lctf=100, hctf=1000, rq=0.5, sus=0.09, dec=1.0, amp=0.75, pan=0.5, freq|
       var  sig, env, filEnv, volEnv, waves;
       env = EnvGen.kr(Env.asr, gate, doneAction: 2);
       volEnv =  EnvGen .ar( Env .new([10e-10, 1, 1, 10e-10], [0.01, sus, dec],  \exp ), gate);

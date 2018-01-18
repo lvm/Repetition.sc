@@ -33,8 +33,8 @@ Repetition {
     srv.options.memSize = 8192 * 16;
     srv.options.maxNodes = 1024 * 32;
     srv.options.sampleRate = 44100;
-    srv.options.numOutputBusChannels = 2;
-    srv.options.numInputBusChannels = 2;
+    srv.options.numOutputBusChannels = 8;
+    srv.options.numInputBusChannels = 16;
     srv.boot();
 
     //start proxyspace
@@ -43,12 +43,13 @@ Repetition {
     ps.clock.tempo = default_tempo;
     ps.quant = quant;
 
+    if ("StageLimiter".classExists) { StageLimiter.activate; };
     "-> Repetition Loaded".postln;
   }
 
+
   initSuperDirt {
     var dirt;
-    if ("StageLimiter".classExists) { StageLimiter.activate; };
     dirt = SuperDirt(2, srv);
     dirt.start(57120, (0!8));
     SuperDirt.default = dirt;
@@ -70,4 +71,7 @@ Repetition {
     ^mout;
   }
 
+  getProxySpace {
+    ^ps;
+  }
 }
