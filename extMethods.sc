@@ -226,9 +226,8 @@
   http://kunstmusik.com/2017/10/20/hex-beats/
   */
   hexbeat {
-    |beat|
     // reject anything ouside hex valid numbers
-    ^beat.asList.reject{
+    ^this.asList.reject{
       |chr|
       "0123456789abcdef".asList.indexOfEqual(chr).isNil;
     }
