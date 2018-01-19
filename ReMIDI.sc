@@ -27,6 +27,11 @@
     });
   }
 
+  /*
+  * This method will be deprecated soon, has a couple of interesting functions
+  * but it's pretty pretty much useless since the same result could be achieved
+  * by using synthdefs directly.
+  *
   midiSynthDefs {
 
     var keys, instruments, ccinstruments, noteon, noteoff;
@@ -286,6 +291,7 @@
 
     ^ret;
   }
+  */
 
   on { |chan  note vel=127| mout.noteOn(chan, note: note, veloc:vel); }
   off { |chan| mout.allNotesOff(chan); }

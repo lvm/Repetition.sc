@@ -26,10 +26,18 @@
     }
   }
 
+  chromatic {
+    var chromatic = (\c: 0, \cs: 1, \db: 1, \d: 2, \ds:3, \eb: 3, \e: 4, \f:5, \fs:6, \gb: 6, \g:7, \gs:8, \ab: 8, \a:9, \as:10, \bb: 10, \b:11);
+    if (chromatic[this].notNil) {
+      ^chromatic[this];
+    } {
+      \rest; // failsafe
+    }
+  }
+
   applyCallback {
     |cb evt|
     var sym = this;
-    var chromatic = (\c: 0, \cs: 1, \db: 1, \d: 2, \ds:3, \eb: 3, \e: 4, \f:5, \fs:6, \gb: 6, \g:7, \gs:8, \ab: 8, \a:9, \as:10, \bb: 10, \b:11);
     var octave = evt[\octave];
 
     switch (cb.asSymbol,
@@ -45,7 +53,7 @@
         }
       },
       \asSemitone, {
-        var st = chromatic[sym.asSymbol];
+        var st = sym.asSymbol.chromatic;
         if (st.isNil) {
           sym = \rest;
         } {
@@ -53,7 +61,7 @@
         }
       },
       \asFreq, {
-        var st = chromatic[sym.asSymbol];
+        var st = sym.asSymbol.chromatic;
         sym = ((st ?? 0) + (12 * octave)).midicps;
       },
       \asCC, {
@@ -232,6 +240,10 @@
         h.digit.asBinaryDigits(4)
       };
     }.flat;
+  }
+
+  chromatic {
+    ^this.split($ ).collect(_.asSymbol).collect(_.chromatic);
   }
 }
 
