@@ -48,32 +48,10 @@ Once Repetition is properly installed and everything working correctly, in a _bl
     // Create a Repetition instance, which will automatically boot the SuperCollider server + ProxySpace
     r = Repetition.new;
     // Init MIDIClient if not running, and create MIDIOut instance which is assigned to `m`
-    m = r.initMIDI("LoopBe Internal MIDI", "LoopBe Internal MIDI");
-    // Init SuperDirt with pretty much default settings, except it starts with 8 orbits (4 stereo) instead of just 2 and assign it to `d`
-    d = r.initSuperDirt;
-
-    // Now we can use the MidiEvents class with our MIDIOut instance and create these shortcuts for MIDI Events
-    MidiEvents(m);
-
-    // Also, if we want to create a custom effect for SuperDirt, we can because we "saved" that SuperDirt instance in `d`
-    (
-    d.addModule('wah', {
-        |dirtEvent|
-        dirtEvent.sendSynth('dirt_wah' ++ d.numChannels,
-          [
-            wah: ~wah,
-            out: ~out
-          ]
-        )
-      }, { ~wah.notNil });
-      SynthDef("dirt_wah" ++ d.numChannels, {
-        |out, wah|
-        var sig;
-        sig = In.ar(out, d.numChannels);
-        sig = LPF.ar(sig, LinExp.ar(SinOsc.ar(wah.clip(0.01, 50)), -1, 1, 40, 19500));
-        ReplaceOut.ar(out, sig);
-      }).add;
-    )
+    m = r.initMIDI("Midi Through", "Midi Through Port-0");
+    MIDIIn.connectAll;
+    r.midiEventTypes;  // create the custom midi event types
+    ProxyMixer(r.getProxySpace); // and a nice ProxyMixer
 
 
 So, pretty much that's it.
