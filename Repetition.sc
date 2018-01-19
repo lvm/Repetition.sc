@@ -11,7 +11,7 @@ Repetition {
   classvar itself;
   classvar <srv;
   classvar <ps;
-  classvar <mout;
+  classvar <outmidi;
 
 
   *new {
@@ -63,12 +63,11 @@ Repetition {
 
   initMIDI {
     |dev, port, latency|
-    var outmidi;
     if (MIDIClient.initialized.not) {
       MIDIClient.init;
     };
-    mout = MIDIOut.newByName(dev, port).latency = (latency ?? Server.default.latency);
-    ^mout;
+    outmidi = MIDIOut.newByName(dev, port).latency = (latency ?? Server.default.latency);
+    ^outmidi;
   }
 
   getProxySpace {

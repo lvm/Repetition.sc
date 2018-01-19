@@ -5,9 +5,7 @@
 
 + Repetition {
 
-  eventTypes {
-    |outmidi|
-
+  midiEventTypes {
     Event.addEventType(\md, {
       |server|
       ~type = \midi;
@@ -22,10 +20,14 @@
       ~type = \midi;
       ~midicmd = \control;
       ~midiout = outmidi;
+      ~chan = ~chan ?? 9;
       ~ctlNum = ~ctlNum ?? 23;
       currentEnvironment.play;
     });
   }
+
+  on { |chan  note vel=127| outmidi.noteOn(chan, note: note, veloc:vel); }
+  off { |chan| outmidi.allNotesOff(chan); }
 
   /*
   * This method will be deprecated soon, has a couple of interesting functions
@@ -292,8 +294,5 @@
     ^ret;
   }
   */
-
-  on { |chan  note vel=127| mout.noteOn(chan, note: note, veloc:vel); }
-  off { |chan| mout.allNotesOff(chan); }
 
 }

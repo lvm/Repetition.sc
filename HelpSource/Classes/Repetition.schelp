@@ -6,6 +6,12 @@ related:: Classes/Prepetition
 DESCRIPTION::
 A (tiny) dialect for building patterns, *heavily* inspired by TidalCycles.
 
+
+note::
+This software is sort of experimental, mainly an exploration of SuperCollider + Live Coding.
+::
+
+
 So far, I've implemented only these possibilities:
 
 LIST::
@@ -79,8 +85,7 @@ A simple link::Classes/Pbind:::
 
 code::
 (
-var notes = "0 0+3 7".parseRepetitionPattern;
-~x = notes.at(0).asPbind((tempo: 60/60, type: \md, chan: 2, amp: 0.75));
+~x = "0 0+3 7".asRepetition((tempo: 60/60, type: \md, chan: 2, amp: 0.75));
 )
 ::
 
@@ -114,6 +119,7 @@ var test = "bd sn | ch*3 | 0@ 4 7 0 9 0".parseRepetitionPattern;
 )
 ::
 
+
 In which I defined a dict, code::pbd::, which later is blended with
 code::drum:: another dict which defines a midi channel. Later on, code::drum::
 is blended once again with different settings, once using code::stut:: that
@@ -139,8 +145,16 @@ var p = [\c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \a, \gs, \a, \gs, \a, \gs, \a, 
   ChordProg.getChord(n, chord[n])
 }.flat.join(" ");
 var pbd = (tempo: 60/60, cb: \asInt, chan: 4, stretch: 26, type: \md, amp: 0.8);
-var polc = p.parseRepetitionPattern;
-~poly = polc.at(0).asPbind(pbd);
+~kindofpolynomialc = p.asRepetition(pbd);
+)
+::
+
+
+Or if you're using the same instrument for the polyrhythm, you can 'group' them:
+
+code::
+(
+~pr = "bd sn | ch*3 | r cp r".asGroupRepetition( (tempo: 60/60, chan: 9, cb: \asPerc, type: \md, amp: 0.5) );
 )
 ::
 
@@ -152,8 +166,7 @@ For example, we can use C3, C4, C5 as the frequencies to pass to an imaginary LP
 code::
 (
 var pbd = (chan:7, cb:\asFreq, to:\control, tempo: 60/60, octave: Pseq([3,4,5],inf), type: \cc, amp: 1);
-var fun = "c".parseRepetitionPattern;
-~fun = fun.at(0).asPbind(pbd);
+~fun = "c".asRepetition(pbd);
 )
 ::
 
@@ -169,6 +182,7 @@ LIST::
 ## code::\asFn::, which takes an additional arg code::\fn:: (which should be a function), which will receive two args: current perc value and the whole event
 ## code::\asFreq::, which tries to convert a note (chromatic scale) to a frequency (using code::.midicps::)
 ## code::\asSemitone::, which tries to convert a note (chromatic scale) to its semitone (code::0..12::)
+## code::\asCC::, which tries to convert the current value (Float) to a MIDI CC value (code::0..127::)
 ::
 
 
@@ -176,9 +190,7 @@ This example will play the following chords: teletype::Cmin, DMaj, EMaj7::
 
 code::
 (
-var pbd = (tempo: 60/60, octave: 5, type: \md, amp: 0.5);
-var ccc = "c d e".parseRepetitionPattern;
-~ccc = ccc.at(0).asPbind(pbd.blend((chan: 4, cb: \asChord, chord: Pseq([\min,\maj,\maj7],inf))));
+~ccc = "c d e".asRepetition((tempo: 60/60, octave: 5, type: \md, amp: 0.5, chan: 4, cb: \asChord, chord: Pseq([\min,\maj,\maj7],inf)));
 )
 ::
 
@@ -191,9 +203,7 @@ equals to current-note + code::12*Pkey(\octave))::.
 
 code::
 (
-var pbd = (tempo: 60/60, octave: 5, type: \md, amp: 0.5);
-var fun = "bd".parseRepetitionPattern;
-~fun = fun.at(0).asPbind(pbd.blend((chan: 9, cb: \asFn, fn: {|x| [x].asGMPerc + (12..24).choose }, octave: 0)));
+~fun = "bd".asRepetition( (tempo: 60/60, octave: 5, type: \md, amp: 0.5, chan: 9, cb: \asFn, fn: {|x| [x].asGMPerc + (12..24).choose }, octave: 0) );
 )
 ::
 
@@ -253,6 +263,76 @@ var t8 = pat.parseRepetitionPattern;
 )
 ::
 
+SUBSECTION:: Custom MIDI Event Types
+
+Currently, link::Classes/Repetition:: provides two custom link::Classes/Event:: types: code::\md:: and code::\cc::. Both are a simplification of a normal link::Classes/Event:: type code::\midi:: declaring by default code::~type::, code::~midiout::, code::~chan:: (code::9:: by default) and code::~amp::.
+To use them you just need to call code::Repetition.initMIDI:: and code::Repetition.midiEventTypes:: .
+Example:
+
+code::
+(
+r = Repetition.new;
+m = r.initMIDI("Midi Through", "Midi Through Port-0");
+r.midiEventTypes();
+)
+::
+
+
+SUBSECTION:: External Methods
+
+Also, I've added the most common Pattern classes as methods, there isn't a really good reason other than it's more comfortable to type when chaining methods.
+
+code::
+(
+16.collect{ |x| x + x.rand(x, x*2) }.stutter(8).scramble.asPseq(rep: inf, offs: 0);
+[1,2,3].asPwrand([0.1,0.5,0.23].normalizeSum, inf).stutter(8);
+)
+::
+
+The available methods are:
+
+LIST::
+## code::asPseq::, takes two arguments: code::rep:: (repeats) and code::offs:: (offset).
+## code::asPshuf::, takes one argument: code::rep:: (repeats).
+## code::asPrand::, takes one argument: code::rep:: (repeats).
+## code::asPxrand::, takes one argument: code::rep:: (repeats).
+## code::asPwrand::, takes two arguments: code::weights:: (weights) and code::rep:: (repeats).
+::
+
+
+SUBSECTION:: Shortcuts
+
+In case you don't feel like typing those extra characters, there are a couple of shortcuts available:
+
+LIST::
+## code::rp::, for code::asRepetition::
+## code::grp::, for code::asGroupRepetition::
+## code::bj::, for code::asBjorklund::
+## code::ps::, for code::asPseq::
+## code::psh::, for code::asPshuf::
+## code::pr::, for code::asPrand::
+## code::px::, for code::asPxrand::
+## code::pw::, for code::asPwrand::
+::
+
+
+SUBSECTION:: Booting up
+
+And last but not least, the recommended way [*] to boot SuperCollider link::Classes/Server:: + link::Classes/ProxySpace:: with link::Classes/Repetition::
+
+code::
+(
+r = Repetition.new;
+m = r.initMIDI("Midi Through", "Midi Through Port-0");
+MIDIIn.connectAll;
+r.midiEventTypes;  // setup repetition midi stuff
+ProxyMixer(r.getProxySpace);
+)
+::
+
+[*] At least, how I do it :-)
+
+
 CLASSMETHODS::
 
 METHOD:: new
@@ -301,3 +381,39 @@ ARGUMENT:: latency
 MIDI Latency. See link::Classes/MIDIOut::
 
 returns:: link::Classes/MIDIOut::
+
+
+METHOD:: midiEventTypes
+Creates two link::Classes/Event:: types, code::\md:: and code::\cc::
+
+returns:: link::Classes/Repetition::
+
+
+METHOD:: on
+Sends a Note On to a MIDI Channel
+
+ARGUMENT:: chan
+Channel number
+
+ARGUMENT:: note
+MIDI Note number
+
+ARGUMENT:: vel
+MIDI Velocity
+
+returns:: link::Classes/Repetition::
+
+
+METHOD:: off
+Sends a Note Off to a MIDI Channel
+
+ARGUMENT:: chan
+Channel number
+
+returns:: link::Classes/Repetition::
+
+
+METHOD:: getProxySpace
+Returns the link::Classes/ProxySpace:: instance
+
+returns:: link::Classes/ProxySpace::
