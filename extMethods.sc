@@ -218,7 +218,7 @@
     |... pbd|
     ^Ppar(this.parseRepetitionPattern.collect{ |pat| pat.asPbind(pbd); }.asArray, inf);
   }
-  grp { |... pbd| ^this.asGroupRepetition(pbd, inf); }
+  grp { |... pbd| ^this.asGroupRepetition(pbd); }
 
 
   /*
