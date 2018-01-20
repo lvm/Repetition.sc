@@ -85,7 +85,7 @@ A simple link::Classes/Pbind:::
 
 code::
 (
-~x = "0 0+3 7".asRepetition((tempo: 60/60, type: \md, chan: 2, amp: 0.75));
+~x = "0 0+3 7".asRepetition(\tempo, 60/60, \type, \md, \chan, 2, \amp, 0.75);
 )
 ::
 
@@ -110,12 +110,12 @@ Another a bit more complex link::Classes/Pbind:: example:
 
 code::
 (
-var pbd = (tempo: 60/60, type: \md, amp: 0.5);
-var drum = pbd.blend((chan: 9, cb: \asPerc));
+var pbd = [\tempo, 60/60, \type, \md, \amp, 0.5];
+var drum = pbd ++ [\chan, 9, \cb: \asPerc];
 var test = "bd sn | ch*3 | 0@ 4 7 0 9 0".parseRepetitionPattern;
-~q = test.at(0).asPbind(drum.blend((stut: 2)));
-~w = test.at(1).asPbind(drum.blend((stretch: Pseq([1,1/4,1/2,2].stutter(4),inf))));
-~e = test.at(2).asPbind(pbd.blend((chan: 4, octave: Pseq([3,4,5],inf), cb: \asInt, amp: 0.7)));
+~q = test.at(0).asPbind(drum ++ [\stut, 2]);
+~w = test.at(1).asPbind(drum ++ [\stretch, Pseq([1,1/4,1/2,2].stutter(4),inf)]);
+~e = test.at(2).asPbind(pbd ++ [\chan, 4, \octave, Pseq([3,4,5],inf), \cb: \asInt, \amp, 0.7]);
 )
 ::
 
@@ -144,8 +144,7 @@ var p = [\c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \a, \gs, \a, \gs, \a, \gs, \a, 
   |n|
   ChordProg.getChord(n, chord[n])
 }.flat.join(" ");
-var pbd = (tempo: 60/60, cb: \asInt, chan: 4, stretch: 26, type: \md, amp: 0.8);
-~kindofpolynomialc = p.asRepetition(pbd);
+~kindofpolynomialc = p.asRepetition(\tempo, 60/60, \cb, \asInt, \chan, 4, \stretch, 26, \type, \md, \amp, 0.8);
 )
 ::
 
@@ -154,7 +153,7 @@ Or if you're using the same instrument for the polyrhythm, you can 'group' them:
 
 code::
 (
-~pr = "bd sn | ch*3 | r cp r".asGroupRepetition( (tempo: 60/60, chan: 9, cb: \asPerc, type: \md, amp: 0.5) );
+~pr = "bd sn | ch*3 | r cp r".asGroupRepetition(\tempo, 60/60, \chan, 9, \cb, \asPerc, \type, \md, \amp, 0.5);
 )
 ::
 
@@ -165,8 +164,7 @@ Originally, it would try to guess where to send the current value, for example, 
 For example, we can use C3, C4, C5 as the frequencies to pass to an imaginary LPF Filter via MIDI CC.
 code::
 (
-var pbd = (chan:7, cb:\asFreq, to:\control, tempo: 60/60, octave: Pseq([3,4,5],inf), type: \cc, amp: 1);
-~fun = "c".asRepetition(pbd);
+~fun = "c".asRepetition(\chan, 7, \cb, \asFreq, \to, \control, \tempo, 60/60, \octave, Pseq([3,4,5],inf), \type, \cc, \amp, 1);
 )
 ::
 
@@ -190,7 +188,7 @@ This example will play the following chords: teletype::Cmin, DMaj, EMaj7::
 
 code::
 (
-~ccc = "c d e".asRepetition((tempo: 60/60, octave: 5, type: \md, amp: 0.5, chan: 4, cb: \asChord, chord: Pseq([\min,\maj,\maj7],inf)));
+~ccc = "c d e".asRepetition(\tempo, 60/60, \octave, 5, \type, \md, \amp, 0.5, \chan, 4, \cb, \asChord, \chord, Pseq([\min,\maj,\maj7],inf));
 )
 ::
 
@@ -203,7 +201,7 @@ equals to current-note + code::12*Pkey(\octave))::.
 
 code::
 (
-~fun = "bd".asRepetition( (tempo: 60/60, octave: 5, type: \md, amp: 0.5, chan: 9, cb: \asFn, fn: {|x| [x].asGMPerc + (12..24).choose }, octave: 0) );
+~fun = "bd".asRepetition(\tempo, 60/60, \type, \md, \amp, 0.5, \chan, 9, \cb, \asFn, \fn, {|x| [x].asGMPerc + (12..24).choose }, \octave, 0);
 )
 ::
 
@@ -252,14 +250,8 @@ An example chaining Bjorklund/Euclidean rhythms:
 
 code::
 (
-var pbd = (tempo: 60/60, type: \md, amp: 0.75, chan: 9, cb: \asPerc);
-var pat = ("bd".asBjorklund(3,8))+"| r r r sn r r | r ch ch@ ch |"+("rm".asBjorklund(5,8))+"|cp";
-var t8 = pat.parseRepetitionPattern;
-~t80 = t8.at(0).asPbind(pbd);
-~t81 = t8.at(1).asPbind(pbd);
-~t82 = t8.at(2).asPbind(pbd);
-~t83 = t8.at(3).asPbind(pbd);
-~t84 = t8.at(4).asPbind(pbd);
+var pat = (("bd".asBjorklund(3,8))+"| r r r sn r r | r ch ch@ ch |"+("rm".asBjorklund(5,8))+"|cp");
+~pbj = pat.asGroupRepetition(\tempo, 60/60, \type, \md, \amp, 0.75, \chan, 9, \cb, \asPerc);
 )
 ::
 
@@ -273,14 +265,14 @@ code::
 (
 r = Repetition.new;
 m = r.initMIDI("Midi Through", "Midi Through Port-0");
-r.midiEventTypes();
+r.midiEventTypes;
 )
 ::
 
 
 SUBSECTION:: External Methods
 
-Also, I've added the most common Pattern classes as methods, there isn't a really good reason other than it's more comfortable to type when chaining methods.
+Also, I've added the most common link::Classes/Pattern:: classes as methods, there isn't a really good reason other than it's more comfortable to type when chaining methods.
 
 code::
 (
@@ -326,7 +318,7 @@ r = Repetition.new;
 m = r.initMIDI("Midi Through", "Midi Through Port-0");
 MIDIIn.connectAll;
 r.midiEventTypes;  // setup repetition midi stuff
-ProxyMixer(r.getProxySpace);
+ProxyMixer(r.getProxySpace); // and a nice proxymixer too
 )
 ::
 

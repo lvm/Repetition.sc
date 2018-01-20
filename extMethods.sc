@@ -209,16 +209,16 @@
   }
 
   asRepetition {
-    |pbd|
-    ^this.parseRepetitionPattern.at(0).asPbind(pbd);
+    |... pbd|
+    ^this.parseRepetitionPattern.pop.asPbind(pbd);
   }
-  rp { |pbd| ^this.asRepetition(pbd); }
+  rp { |... pbd| ^this.asRepetition(pbd); }
 
   asGroupRepetition {
-    |pbd rep=inf|
-    ^Ppar(this.parseRepetitionPattern.collect{ |pat| pat.asPbind(pbd); }.asArray, rep);
+    |... pbd|
+    ^Ppar(this.parseRepetitionPattern.collect{ |pat| pat.asPbind(pbd); }.asArray, inf);
   }
-  grp { |pbd rep=inf| ^this.asGroupRepetition(pbd, rep); }
+  grp { |... pbd| ^this.asGroupRepetition(pbd, inf); }
 
 
   /*
@@ -249,8 +249,14 @@
 + Dictionary {
 
   asPbind {
-    |dict|
-    var pbindcc, cc = dict[\cc], pchain = Pchain(Prepetition(), Pbind(*this.blend(dict).getPairs));
+    |... pbd|
+    var pbindcc, cc, pchain, dict; // = dict[\cc], pchain = Pchain(Prepetition(), Pbind(*this.blend(dict).getPairs));
+    // array to dict.
+    dict = ();
+    dict.putPairs(pbd);
+
+    cc = dict[\cc];
+    pchain = Pchain(Prepetition(), Pbind(*(this.getPairs ++ pbd.flat)));
 
     if (cc.notNil) {
       pbindcc = cc
@@ -269,7 +275,7 @@
     }
 
   }
-  pb { |dict| ^this.asPbind(dict); }
+  pb { |... pbd| ^this.asPbind(pbd); }
 
 }
 
