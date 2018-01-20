@@ -91,8 +91,7 @@ A more in-depth documentation is available in SCDoc formatm, browseable through 
 
 ```
 (
-var notes = "0 0+3 7".parseRepetitionPattern;
-~x = notes.at(0).asPbind((tempo: 60/60, type: \md, chan: 2, amp: 0.75));
+~x = "0 0+3 7".asRepetition(\tempo, 60/60, \type, \md, \chan, 2, \amp, 0.75);
 )
 ```
 
