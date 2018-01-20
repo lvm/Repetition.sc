@@ -250,29 +250,24 @@
 
   asPbind {
     |... pbd|
-    var pbindcc, cc, pchain, dict; // = dict[\cc], pchain = Pchain(Prepetition(), Pbind(*this.blend(dict).getPairs));
-    // array to dict.
-    dict = ();
-    dict.putPairs(pbd);
-
-    cc = dict[\cc];
-    pchain = Pchain(Prepetition(), Pbind(*(this.getPairs ++ pbd.flat)));
-
-    if (cc.notNil) {
-      pbindcc = cc
-      .asDict.keys()
-      .collect {
-        |key|
-        var ctrl = cc[cc.indexOfEqual(key)+1];
-        Pbind(\type, \cc, \chan, dict[\chan], \dur, dict[\ccdur] ?? 1, \ctlNum, key, \control, ctrl);
-      }
-      .asArray
-      ;
-
-      ^Ppar(pbindcc ++ pchain.asArray);
-    } {
-      ^pchain;
-    }
+    ^Pchain(Prepetition(), Pbind(*(this.getPairs ++ pbd.flat)));
+    // I'll leave this out for now until I find a better solution.
+    //
+    // if (cc.notNil) {
+    //   pbindcc = cc
+    //   .asDict.keys()
+    //   .collect {
+    //     |key|
+    //     var ctrl = cc[cc.indexOfEqual(key)+1];
+    //     Pbind(\type, \cc, \chan, dict.at(\chan), \dur, dict.at(\ccdur) ?? 1, \ctlNum, key, \control, ctrl);
+    //   }
+    //   .asArray
+    //   ;
+    //
+    //   ^Ppar(pbindcc ++ pchain.asArray);
+    // } {
+    //   ^pchain;
+    // }
 
   }
   pb { |... pbd| ^this.asPbind(pbd); }
