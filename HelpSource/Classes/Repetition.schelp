@@ -289,6 +289,7 @@ LIST::
 ## code::asPrand::, takes one argument: code::rep:: (repeats).
 ## code::asPxrand::, takes one argument: code::rep:: (repeats).
 ## code::asPwrand::, takes two arguments: code::weights:: (weights) and code::rep:: (repeats).
+## code::asPlace::, takes two arguments: code::rep:: (repeats) and code::offs:: (offset).
 ::
 
 
@@ -305,6 +306,7 @@ LIST::
 ## code::pr::, for code::asPrand::
 ## code::px::, for code::asPxrand::
 ## code::pw::, for code::asPwrand::
+## code::pl::, for code::asPlace::
 ::
 
 

@@ -326,6 +326,12 @@
   }
   pw { |weights rep=inf| ^this.asPwrand(weights, rep) }
 
+  asPlace {
+    |rep = inf, offs = 0|
+    ^Place(this, rep, offs);
+  }
+  pl { |rep = inf, offs = 0| ^this.asPlace(rep, offs) }
+
 
 }
 
