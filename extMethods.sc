@@ -37,48 +37,45 @@
 
   applyCallback {
     |cb evt|
-    var sym = this;
+    var self = this;
     var octave = evt[\octave];
 
     switch (cb.asSymbol,
       \asInt, {
-        sym = sym.asInt;
+        self = self.asInt;
       },
-      // Requires `ChordProg`
       \asChord, {
-        if (sym.asSymbol.isRest) {
-          sym = \rest;
+        var sself = self.asString;
+        var ch = Chord.names.reject{ |ch| sself.findRegexp(ch.asString++"$").size == 0 }.pop;
+        if ( ch.notNil ) {
+          self = Note(sself.replace(ch.asString, "").asSymbol).degree + Chord(ch);
         } {
-          sym = [sym].asChord(evt[\chord] ?? \maj).flat;
+          self = \rest;
         }
       },
-      \asSemitone, {
-        var st = sym.asSymbol.chromatic;
-        if (st.isNil) {
-          sym = \rest;
-        } {
-          sym = st;
-        }
+      // soon to be gone.
+      \asSemitone, { self = Note(self).degree; },
+      \asDegree, {
+        self = Note(self).degree;
       },
       \asFreq, {
-        var st = sym.asSymbol.chromatic;
-        sym = ((st ?? 0) + (12 * octave)).midicps;
+        self = Note(self).freq(octave);
       },
       \asCC, {
-        sym = sym.asFloat.midirange;
+        self = self.asFloat.midirange;
       },
       // Requires `PercSymbol`
       \asPerc, {
-        sym = [sym].asGMPerc;
+        self = [self].asGMPerc;
       },
       \asFn, {
         if (evt[\fn].notNil) {
-          sym = evt[\fn].value(sym, evt);
+          self = evt[\fn].value(self, evt);
         }
       }
     );
 
-    ^sym;
+    ^self;
   }
 
   maybeRepeat {
