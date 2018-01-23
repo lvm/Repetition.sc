@@ -149,13 +149,14 @@ var p = [\c, \gs, \c, \gs, \c, \gs, \c, \gs, \c, \a, \gs, \a, \gs, \a, \gs, \a, 
 ::
 
 
-Or if you're using the same instrument for the polyrhythm, you can 'group' them:
+Or if you're using the same instrument for polyrhythm, you can 'group' them:
 
 code::
 (
 ~pr = "bd sn | ch*3 | r cp r".asGroupRepetition(\tempo, 60/60, \chan, 9, \cb, \asPerc, \type, \md, \amp, 0.5);
 )
 ::
+
 
 SUBSECTION:: Backend
 
@@ -179,7 +180,7 @@ LIST::
 ## code::\asSynth::, which should be used with code::\type::, code::\dirt::, otherwise the value will be passed as code::\note::
 ## code::\asFn::, which takes an additional arg code::\fn:: (which should be a function), which will receive two args: current perc value and the whole event
 ## code::\asFreq::, which tries to convert a note (chromatic scale) to a frequency (using code::.midicps::)
-## code::\asSemitone::, which tries to convert a note (chromatic scale) to its semitone (code::0..12::)
+## code::\asDegree::, which tries to convert a note (chromatic scale) to its semitone (code::0..12::) (formerly code::\asSemitone::)
 ## code::\asCC::, which tries to convert the current value (Float) to a MIDI CC value (code::0..127::)
 ::
 
@@ -188,12 +189,13 @@ This example will play the following chords: teletype::Cmin, DMaj, EMaj7::
 
 code::
 (
-~ccc = "c d e".asRepetition(\tempo, 60/60, \octave, 5, \type, \md, \amp, 0.5, \chan, 4, \cb, \asChord, \chord, Pseq([\min,\maj,\maj7],inf));
+~ccc = "cmin dmaj emaj7".asRepetition(\tempo, 60/60, \octave, 5, \type, \md, \amp, 0.5, \chan, 4, \cb, \asChord);
 )
 ::
 
 
-This other example, will add a number between 12 and 24 to the current midinote.  Also notice
+
+This example, will add a number between 12 and 24 to the current midinote.  Also notice
 code::octave: 0::.  That is because in this particular case, since it's a Event
 type MIDI, it'll add automatically code::octave: 5::, so 36 (bd) instead of
 ending between 48 and 60, it would end between 108 and 120 (code::octave: 5::
