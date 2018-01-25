@@ -7,10 +7,10 @@ Note {
   classvar <twelve;
   var <note;
 
-	*new { | n = \c |
+  *new { | n = \c |
     if (n.isKindOf(Symbol).not) { Error("Please use Note(name.asSymbol) instead.").throw };
     ^super.new.init(n);
-	}
+  }
 
   *initClass {
     twelve = (\c: 0, \cs: 1, \db: 1, \d: 2, \ds:3, \eb: 3, \e: 4, \f:5, \fs:6, \gb: 6, \g:7, \gs:8, \ab: 8, \a:9, \as:10, \bb: 10, \b:11);
@@ -54,10 +54,10 @@ Chord {
   classvar <chords, <progs;
   var <chord;
 
-	*new { | ch = \one |
-		if(ch.isKindOf(Symbol).not) { Error("Please use Chord(name.asSymbol) instead.").throw };
+  *new { | ch = \one |
+    if(ch.isKindOf(Symbol).not) { Error("Please use Chord(name.asSymbol) instead.").throw };
     ^super.new.init(ch);
-	}
+  }
 
   *initClass {
     chords = (
@@ -135,10 +135,10 @@ Progression {
   classvar <progs;
   var <prog;
 
-	*new { | prg = \eleven |
-		if(prg.isKindOf(Symbol).not) { Error("Please use Progression(name.asSymbol) instead.").throw };
+  *new { | prg = \eleven |
+    if(prg.isKindOf(Symbol).not) { Error("Please use Progression(name.asSymbol) instead.").throw };
     ^super.new.init(prg);
-	}
+  }
 
   *initClass {
     progs = (
@@ -193,16 +193,22 @@ Progression {
 
 
 + Scale {
-  chordProgression {
-    |prog_name = \eleven|
+  chords {
     var majChords = [Chord(\maj), Chord(\min), Chord(\min), Chord(\maj), Chord(\maj), Chord(\min), Chord(\dim)];
     var minChords = [Chord(\min), Chord(\dim), Chord(\maj), Chord(\min), Chord(\min), Chord(\maj), Chord(\maj)];
     var chords = this.degrees;
-    var prog = Progression(prog_name);
 
     if (this.name == "Major") { chords = this.degrees + majChords; };
     if (this.name == "Natural Minor") { chords = this.degrees + minChords; };
 
-    ^Array.fill(prog.size, { |i| chords[prog[i]] });
+    ^chords;
+  }
+
+  chordProgression {
+    |prog_name = \eleven|
+    var progression = Progression(prog_name);
+    var chords = this.chords;
+
+    ^Array.fill(progression.size, { |i| chords[progression[i]] });
   }
 }
