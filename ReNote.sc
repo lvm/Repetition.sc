@@ -1,6 +1,6 @@
 /*
         ReNote.sc
-        Notes and Chords for SuperCollider as part of Repetition.sc
+        Notes, Chords, Progressions and Scale.chordProgression for SuperCollider as part of Repetition.sc
 */
 
 Note {
@@ -51,7 +51,7 @@ Note {
 }
 
 Chord {
-  classvar <chords;
+  classvar <chords, <progs;
   var <chord;
 
 	*new { | ch = \one |
@@ -131,6 +131,53 @@ Chord {
 }
 
 
+Progression {
+  classvar <progs;
+  var <prog;
+
+	*new { | prg = \eleven |
+		if(prg.isKindOf(Symbol).not) { Error("Please use Progression(name.asSymbol) instead.").throw };
+    ^super.new.init(prg);
+	}
+
+  *initClass {
+    progs = (
+      \eleven: [1,0,1,4],
+      \elevenb: [1,4,1,0],
+      \elevenc: [1,4,0],
+      \elevend: [5,1,4,0],
+      \sad: [0,3,4,4],
+      \ballad: [0,0,3,5],
+      \balladb: [0,3,5,4],
+      \rockplus: [0,3,0,4],
+      \rebel: [3,4,3],
+      \nrg: [0,2,3,5],
+      \creepy: [0,5,3,4],
+      \creepyb: [0,5,1,4],
+      \rock: [0,3,4],
+      \gral: [0,3,4,0],
+      \gralb: [0,3,1,4],
+      \blues: [0,3,0,4,0],
+      \pop: [0,4,5,3],
+      \roll: [0,3,4,3],
+      \unresolved: [3,0,3,4],
+      \bluesplus: [0,0,0,0,3,3,0,0,4,3,0,0,],
+    );
+  }
+
+  *names {
+    ^progs.keys.asArray;
+  }
+
+  init {
+    |prg|
+    prog = prg;
+    ^if (progs.at(prg).notNil) { progs.at(prg) } { [0] };
+  }
+
+}
+
+
 + Integer {
   toABC {
     ^Note.theTwelve.findKeyForValue(this.fold(0,11));
@@ -141,5 +188,21 @@ Chord {
 + String {
   toNote {
     ^Note(this.toLower.asSymbol);
+  }
+}
+
+
++ Scale {
+  chordProgression {
+    |prog_name = \eleven|
+    var majChords = [Chord(\maj), Chord(\min), Chord(\min), Chord(\maj), Chord(\maj), Chord(\min), Chord(\dim)];
+    var minChords = [Chord(\min), Chord(\dim), Chord(\maj), Chord(\min), Chord(\min), Chord(\maj), Chord(\maj)];
+    var chords = this.degrees;
+    var prog = Progression(prog_name);
+
+    if (this.name == "Major") { chords = this.degrees + majChords; };
+    if (this.name == "Natural Minor") { chords = this.degrees + minChords; };
+
+    ^Array.fill(prog.size, { |i| chords[prog[i]] });
   }
 }
