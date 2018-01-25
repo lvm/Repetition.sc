@@ -65,6 +65,7 @@ Chord {
       \maj: [0, 4, 7],
       \min: [0, 3, 7],
       \dim: [0, 3, 6],
+      \aug: [0, 4, 8],
       \dim7: [0, 3, 6, 9],
       \five: [0, 7],
       \dom7: [0, 4, 7, 10],
@@ -194,12 +195,16 @@ Progression {
 
 + Scale {
   chords {
-    var majChords = [Chord(\maj), Chord(\min), Chord(\min), Chord(\maj), Chord(\maj), Chord(\min), Chord(\dim)];
-    var minChords = [Chord(\min), Chord(\dim), Chord(\maj), Chord(\min), Chord(\min), Chord(\maj), Chord(\maj)];
-    var chords = this.degrees;
+    var chords = [];
+    var maj = [\maj, \min, \min, \maj, \maj, \min, \dim].collect(Chord(_));
+    var min = [\min, \dim, \maj, \min, \min, \maj, \maj].collect(Chord(_));
+    var harMin = [\min, \dim, \aug, \min, \maj, \maj, \dim].collect(Chord(_));
+    var melMin = [\min, \min, \aug, \maj, \maj, \dim, \dim].collect(Chord(_));
 
-    if (this.name == "Major") { chords = this.degrees + majChords; };
-    if (this.name == "Natural Minor") { chords = this.degrees + minChords; };
+    if (this.name == "Major") { chords = this.degrees + maj; };
+    if (this.name == "Natural Minor") { chords = this.degrees + min; };
+    if (this.name == "Harmonic Minor") { chords = this.degrees + harMin; };
+    if (this.name == "Melodic Minor") { chords = this.degrees + melMin; };
 
     ^chords;
   }
