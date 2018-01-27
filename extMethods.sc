@@ -180,13 +180,15 @@
   }
 
   parseRepetitionPattern {
-    var regexp = "([\\w\\.\\'\\,!?@?\\+?(\\*\d+)? ]+)";
+    // var regexp = "([\\w\\.\\'\\,!?@?\\+?(\\*\d+)? ]+)";
+    var regexp = "([\\w\\.\\/\\'\\,!?@?\\+?(\\*\d+)? ]+)";
 
     ^this
     .asString
     .findRegexp(regexp)
     .collect(_[1])
     .collect(_.stripWhiteSpace)
+    .collect(_.replace("/", ""))
     .uniq
     .collect(_.flat)
     .collect(_.asSymbol)

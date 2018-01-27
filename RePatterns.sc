@@ -15,7 +15,6 @@ Prepetition {
         var to = evt[\to] ?? \midinote;
         var isPerc = false;
 
-
         // "defaults"
         evt[\stut] = evt[\stut] ?? 1;
         evt[\dur] = evt[\time].at(idx);
@@ -36,7 +35,7 @@ Prepetition {
         };
 
         // where to send the current evt
-        evt[to] = current + (if (((to.asSymbol == \midinote) || (to.asSymbol == \control) )&& (isPerc.asBoolean == false)) { 12*evt[\octave] } { 0 });
+        evt[to] = current + (if (((to.asSymbol == \midinote) || (to.asSymbol == \control)) && (isPerc.asBoolean == false)) { 12*evt[\octave] } { 0 });
 
         // pattern playing order
         evt[\sort] = evt[\sort] ?? \normal;
@@ -61,3 +60,24 @@ Prepetition {
     }).stutter(Pkey(\stut));
   }
 }
+
+Linda {
+  *new {
+    |lsystem basepattern|
+    var lsys = lsystem.asStream;
+    var lindenmayer = Prout({
+      |evt|
+       while { evt.notNil } {
+        evt[\type] = \md;
+        evt[\amp] = 0.9;
+        evt[\stut] = evt[\stut] ?? 1;
+        evt[\plus] = evt[\plus] ?? 0;
+        evt[\midinote] = [lsys.next].asGMPerc.flat + evt[\plus];
+        evt = evt.yield;
+      }
+    }).stutter(Pkey(\stut));
+
+    ^Pchain(lindenmayer, basepattern);
+  }
+}
+

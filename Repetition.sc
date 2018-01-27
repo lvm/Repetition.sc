@@ -15,7 +15,7 @@ Repetition {
 
 
   *new {
-    |default_tempo=2, quant=1| // 120 BPM.
+    |default_tempo=1, quant=1| // 60 BPM.
 
     if(itself.isNil){
       itself = super.new;
@@ -43,6 +43,10 @@ Repetition {
     ps.clock.tempo = default_tempo;
     ps.quant = quant;
 
+    // "fake" hackish synthdef
+    SynthDef(\r, {}).add;
+    SynthDef(\rest, {}).add;
+
     if ("StageLimiter".classExists) { StageLimiter.activate; };
     "-> Repetition Loaded".postln;
   }
@@ -53,10 +57,6 @@ Repetition {
     dirt = SuperDirt(2, srv);
     dirt.start(57120, (0!8));
     SuperDirt.default = dirt;
-
-    // "fake" hackish synthdef
-    SynthDef(\r, {}).add;
-    SynthDef(\rest, {}).add;
 
     ^dirt;
   }
