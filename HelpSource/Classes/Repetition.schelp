@@ -1,7 +1,7 @@
 class:: Repetition
 summary:: A (tiny) dialect for building patterns, *heavily* inspired by TidalCycles.
 categories:: Live Coding
-related:: Classes/Prepetition
+related:: Classes/Prepetition, Guides/Cheatsheet
 
 DESCRIPTION::
 A (tiny) dialect for building patterns, *heavily* inspired by TidalCycles.
@@ -9,6 +9,7 @@ A (tiny) dialect for building patterns, *heavily* inspired by TidalCycles.
 
 note::
 This software is sort of experimental, mainly an exploration of SuperCollider + Live Coding.
+
 ::
 
 

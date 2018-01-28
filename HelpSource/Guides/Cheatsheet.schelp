@@ -1,0 +1,99 @@
+title:: Repetition: Cheatsheet
+summary:: Cheatsheet for Repetition.sc and NodeProxies
+categories:: Language
+related:: Classes/Repetition
+
+Things to remember in case I forget everything.
+
+section:: Useful Classes
+
+code::
+// SIGNALS
+// Pink Noise.
+PinkNoise.ar(mul, add);
+// non-bandlimited impulses. AKA: Clicks. See Blip.
+Impulse.ar(freq, phase, mul, add);
+
+// FX
+// Bit crush and Sample Rate reducing.
+Decimator.ar(in, rate, bits, mul, add);
+// Basic Reverb. See JPVerb or GVerb.
+FreeVerb.ar(in, mix, room, damp, mul, add);
+// All pass delay w/ linear interpolation.
+AllpassL.ar(in, maxdelaytime, delaytime, decaytime, mul, add);
+// Simple delay w/ linear interpolation.
+DelayL.ar(in, maxdelaytime, delaytime, mul, add);
+
+// CONTROL RATE
+// Sine wave.
+SinOsc.kr(freq, phase, mul, add);
+// Squarish wave.
+LFPulse.kr(freq, iphase, width, mul, add);
+// Tracks XY-axis. warp: 0 -> \linear, 1 -> \exponential.
+MouseX.kr(min, max, warp, lag);
+MouseY.kr(min, max, warp, lag);
+
+// EQ
+// Resonant High Pass Filter. Allows frequencies >= freq.
+RHPF.ar(in, freq, rq, mul, add);
+// Resonant Low Pass Filter. Allows frequencies =< freq.
+RLPF.ar(in, freq, rq, mul, add);
+// Attenuate or boot a given frequency. db < 0 attenuate, db > 0 boosts.
+MidEQ.ar(in, freq, rq, db, mul, add);
+
+// ENVELOPES (normally with doneAction:2)
+EnvGen.ar(envelope, gate, levelScale, lebelBias, timeScale, doneAction);
+Env.adsr(attack, decay, sustain, release, peak, curve, bias);
+Env.perc(attack, release, level, curve);
+
+// MIXING
+// Reads inputs. See In.
+SoundIn.ar(in, mul, add);
+// Mixes an array of signals into a single signal (or an array of).
+Mix.ar(signals_array);
+// A Limiter. See Normalizer. See Compander.
+Limiter.ar(in, level, dur);
+// Sample accurate output. See Out.
+OffsetOut.ar(out, channelsArray);
+::
+
+
+section:: Snippets
+
+code::
+// simple saw
+~saw = {
+  |amp=0.9, freq=80, ctf=12500, mix=0.25, room=0.9|
+  var sig;
+  sig = Mix.ar(FreeVerb.ar(RLPF.ar(LFSaw.ar([freq, freq*1.01, freq*0.99]), ctf, 0.5) * -15.dbamp, mix, room))!2;
+  OffsetOut.ar(0, Limiter.ar(sig * amp, 0.9));
+}
+
+// same saw, plus waveform selector.
+~saw = {
+  |amp=0.9, freq=80, ctf=12500, mix=0.25, room=0.9, wave=0, pulse=10|
+  var sig = Mix.ar([FreeVerb.ar(RLPF.ar(LFSaw.ar([freq, freq*1.01, freq*0.99]), ctf, 0.5) * -10.dbamp, mix, room)!2]);
+  sig = Select.ar(wave, [sig, sig * LFPulse.kr(pulse, width:0.75)]);
+  OffsetOut.ar(0, Limiter.ar(sig * amp, 0.9));
+}
+
+// Noisy background with reverb
+(
+~pink = {
+  |freq = 55, amp=0.125, vib=0.5|
+  var sig;
+  sig = PinkNoise.ar([freq, freq*0.99, freq*1.01],mul:0.9)!2 * SinOsc.kr(vib);
+  sig = FreeVerb.ar(Mix.ar([RHPF.ar(sig, freq:freq*2, rq:0.125) * -5.dbamp, sig, FreeVerb.ar(sig, 0.9, 0.9, mul:0.5)]), 0.5, 0.5);
+  OffsetOut.ar(0, Limiter.ar(sig * amp, 0.9));
+};
+
+// Noisy saw.
+~nsaw = {
+  |room=0.5, ctf=1250|
+  var sig;
+  sig = RLPF.ar(Mix.ar([LFSaw.ar(([36,42,38].choose+Chord(\maj9)).collect(_.midicps), mul:0.05), PinkNoise.ar(0.1)]),ctf, MouseX.kr(0.1,0.9,1))!2 * 1.dbamp;
+  OffsetOut.ar(0, Limiter.ar(sig * amp, 0.9));
+};
+)
+::
+
