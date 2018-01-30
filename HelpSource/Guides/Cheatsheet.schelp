@@ -97,6 +97,13 @@ code::
   sig = RLPF.ar(Mix.ar([LFSaw.ar(([36,42,38].choose+Chord(\maj9)).collect(_.midicps), mul:0.05), PinkNoise.ar(0.1)]),ctf, MouseX.kr(0.1,0.9,1))!2 * 1.dbamp;
   OffsetOut.ar(0, Limiter.ar(sig * amp, 0.9));
 };
+
+// crappy strings
+~fb = {
+  |freq, amp=0.9|
+  var sig = FreeVerb.ar(SinOscFB.ar([1, 0.99, 1.01] * freq, 1, 0.5) * (SinOsc.kr(2) * 0.75), 0.9, 0.9);
+  OffsetOut.ar(0, Limiter.ar(Mix.ar(sig * amp)!2, 0.9));
+};
 )
 ::
 
