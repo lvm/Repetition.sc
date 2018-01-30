@@ -13,6 +13,9 @@ code::
 PinkNoise.ar(mul, add);
 // non-bandlimited impulses. AKA: Clicks. See Blip.
 Impulse.ar(freq, phase, mul, add);
+// Fast Sine.
+FSinOsc.ar(freq, iphase, mul);
+
 
 // FX
 // Bit crush and Sample Rate reducing.
@@ -38,7 +41,7 @@ MouseY.kr(min, max, warp, lag);
 RHPF.ar(in, freq, rq, mul, add);
 // Resonant Low Pass Filter. Allows frequencies =< freq.
 RLPF.ar(in, freq, rq, mul, add);
-// Attenuate or boot a given frequency. db < 0 attenuate, db > 0 boosts.
+// Attenuate or boost a given frequency. db < 0 attenuate, db > 0 boosts.
 MidEQ.ar(in, freq, rq, db, mul, add);
 
 // ENVELOPES (normally with doneAction:2)

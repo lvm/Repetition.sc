@@ -69,7 +69,7 @@ Linda {
       |evt|
        while { evt.notNil } {
         evt[\type] = \md;
-        evt[\amp] = 0.9;
+        evt[\amp] = evt[\amp] ?? 0.9;
         evt[\stut] = evt[\stut] ?? 1;
         evt[\plus] = evt[\plus] ?? 0;
         evt[\midinote] = [lsys.next].asGMPerc.flat + evt[\plus];
