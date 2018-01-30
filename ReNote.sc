@@ -196,17 +196,27 @@ Progression {
 + Scale {
   chords {
     var chords = [];
-    var maj = [\maj, \min, \min, \maj, \maj, \min, \dim].collect(Chord(_));
-    var min = [\min, \dim, \maj, \min, \min, \maj, \maj].collect(Chord(_));
-    var harMin = [\min, \dim, \aug, \min, \maj, \maj, \dim].collect(Chord(_));
-    var melMin = [\min, \min, \aug, \maj, \maj, \dim, \dim].collect(Chord(_));
+    var major = [\maj, \min, \min, \maj, \maj, \min, \dim];
+    var minor = [\min, \dim, \maj, \min, \min, \maj, \maj];
+    var harMinor = [\min, \dim, \aug, \min, \maj, \maj, \dim];
+    var melMinor = [\min, \min, \aug, \maj, \maj, \dim, \dim];
+    var dorian = [\min, \min, \maj, \maj, \min, \dim, \maj];
+    var phrygian = [\min, \maj, \maj, \min, \dim, \maj, \min];
+    var lydian = [\maj, \maj, \min, \dim, \maj, \min, \min];
+    var mixolydian = [\maj, \min, \dim, \maj, \min, \min, \maj];
+    var locrian = [\dim, \maj, \min, \min, \maj, \maj, \min];
 
-    if (this.name == "Major") { chords = this.degrees + maj; };
-    if (this.name == "Natural Minor") { chords = this.degrees + min; };
-    if (this.name == "Harmonic Minor") { chords = this.degrees + harMin; };
-    if (this.name == "Melodic Minor") { chords = this.degrees + melMin; };
+    if (this.name == "Major") { chords = major; };
+    if (this.name == "Natural Minor") { chords = minor; };
+    if (this.name == "Harmonic Minor") { chords = harMinor; };
+    if (this.name == "Melodic Minor") { chords = melMinor; };
+    if (this.name == "Dorian") { chords = dorian; };
+    if (this.name == "Phrygian") { chords = phrygian; };
+    if (this.name == "Lydian") { chords = lydian; };
+    if (this.name == "Mixolydian") { chords = mixolydian; };
+    if (this.name == "Locrian") { chords = locrian; };
 
-    ^chords;
+    ^(this.degrees + chords.collect(Chord(_)));
   }
 
   chordProgression {
