@@ -13,7 +13,8 @@ Note {
   }
 
   *initClass {
-    twelve = (\c: 0, \cs: 1, \db: 1, \d: 2, \ds:3, \eb: 3, \e: 4, \f:5, \fs:6, \gb: 6, \g:7, \gs:8, \ab: 8, \a:9, \as:10, \bb: 10, \b:11);
+    // twelve = (\c: 0, \cs: 1, \db: 1, \d: 2, \ds:3, \eb: 3, \e: 4, \f:5, \fs:6, \gb: 6, \g:7, \gs:8, \ab: 8, \a:9, \as:10, \bb: 10, \b:11);
+    twelve = (\c: 0, \cs: 1, \d: 2, \ds:3, \e: 4, \f:5, \fs:6, \g:7, \gs:8, \a:9, \as:10, \b:11);
   }
 
   *theTwelve {
@@ -46,6 +47,10 @@ Note {
   freq {
     |octave=5|
     ^this.midi(octave).midicps;
+  }
+
+  circleOf5th {
+    ^(this.degree + ((0..11) * 7 % 12)) % 12;
   }
 
 }
