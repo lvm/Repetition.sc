@@ -4,7 +4,7 @@
 */
 
 Note {
-  classvar <twelve;
+  classvar twelve, solfa;
   var <note;
 
   *new { | n = \c |
@@ -15,6 +15,7 @@ Note {
   *initClass {
     // twelve = (\c: 0, \cs: 1, \db: 1, \d: 2, \ds:3, \eb: 3, \e: 4, \f:5, \fs:6, \gb: 6, \g:7, \gs:8, \ab: 8, \a:9, \as:10, \bb: 10, \b:11);
     twelve = (\c: 0, \cs: 1, \d: 2, \ds:3, \e: 4, \f:5, \fs:6, \g:7, \gs:8, \a:9, \as:10, \b:11);
+    solfa = (\do: 0, \dos: 1, \re: 2, \res:3, \mi: 4, \fa:5, \fas:6, \sol:7, \sols:8, \la:9, \las:10, \si:11);
   }
 
   *theTwelve {
@@ -39,6 +40,14 @@ Note {
     }
   }
 
+  abc {
+    ^note;
+  }
+
+  solfege {
+    ^solfa.findKeyForValue(this.degree.fold(0,11));
+  }
+
   midi {
     |octave=5|
     ^this.degree+(12*octave);
@@ -50,7 +59,7 @@ Note {
   }
 
   circleOf5th {
-    ^(this.degree + ((0..11) * 7 % 12)) % 12;
+    ^(this.degree + ((0..11) * 7 % 12)).collect(_.toABC).collect(Note(_));
   }
 
 }
