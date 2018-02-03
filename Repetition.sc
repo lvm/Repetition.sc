@@ -51,7 +51,6 @@ Repetition {
     "-> Repetition Loaded".postln;
   }
 
-
   initSuperDirt {
     var dirt;
     dirt = SuperDirt(2, srv);
@@ -70,7 +69,12 @@ Repetition {
     ^outmidi;
   }
 
-  getProxySpace {
+  server {
+    ^srv;
+  }
+
+  proxySpace {
     ^ps;
   }
+
 }
