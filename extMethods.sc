@@ -248,29 +248,28 @@
 + Array {
 
   // midi channels
-  ch1 { ^this.collect(_.midichannel(1)); }
-  ch2 { ^this.collect(_.midichannel(2)); }
-  ch3 { ^this.collect(_.midichannel(3)); }
-  ch4 { ^this.collect(_.midichannel(4)); }
-  ch5 { ^this.collect(_.midichannel(5)); }
-  ch6 { ^this.collect(_.midichannel(6)); }
-  ch7 { ^this.collect(_.midichannel(7)); }
-  ch8 { ^this.collect(_.midichannel(8)); }
-  ch9 { ^this.collect(_.midichannel(9)); }
-  ch10 { ^this.collect(_.midichannel(10)); }
-  ch11 { ^this.collect(_.midichannel(11)); }
-  ch12 { ^this.collect(_.midichannel(12)); }
-  ch13 { ^this.collect(_.midichannel(13)); }
-  ch14 { ^this.collect(_.midichannel(14)); }
-  ch15 { ^this.collect(_.midichannel(15)); }
-  ch16 { ^this.collect(_.midichannel(16)); }
+  ch1 { ^this.collect(_.midichannel(1)).pseq; }
+  ch2 { ^this.collect(_.midichannel(2)).pseq; }
+  ch3 { ^this.collect(_.midichannel(3)).pseq; }
+  ch4 { ^this.collect(_.midichannel(4)).pseq; }
+  ch5 { ^this.collect(_.midichannel(5)).pseq; }
+  ch6 { ^this.collect(_.midichannel(6)).pseq; }
+  ch7 { ^this.collect(_.midichannel(7)).pseq; }
+  ch8 { ^this.collect(_.midichannel(8)).pseq; }
+  ch9 { ^this.collect(_.midichannel(9)).pseq; }
+  ch10 { ^this.collect(_.midichannel(10)).pseq; }
+  ch11 { ^this.collect(_.midichannel(11)).pseq; }
+  ch12 { ^this.collect(_.midichannel(12)).pseq; }
+  ch13 { ^this.collect(_.midichannel(13)).pseq; }
+  ch14 { ^this.collect(_.midichannel(14)).pseq; }
+  ch15 { ^this.collect(_.midichannel(15)).pseq; }
+  ch16 { ^this.collect(_.midichannel(16)).pseq; }
 
   //using synthdef
-  synth { |synthdef=\default| ^this.collect(_.usingsynth(synthdef)); }
+  synth { |synthdef=\default| ^this.collect(_.usingsynth(synthdef)).pseq; }
 
   // functions to apply over a pattern
   mute { ^this.collect(_.merge((amp: 0), { 0 })); }
-  stut { |times=2| ^this.collect(_.dup(times)).flat; }
   stretch { |n| ^this.collect(_.blend( (stretch: n) ) ); }
   fast { |n| ^this.stretch(1/n); }
   slow { |n| ^this.stretch(n); }
