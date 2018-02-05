@@ -5,70 +5,6 @@
 
 + Symbol {
 
-  // Requires `PercSymbol`;
-  asPerc {
-    ^this
-    .collect {
-      |item|
-      if(item.isEmpty) {
-        \rest;
-      } {
-        item;
-      }
-    }
-    .collect {
-      |item|
-      if (item.isRest) {
-        item;
-      } {
-        item.asGMPerc;
-      }
-    }
-  }
-
-  applyCallback {
-    |cb evt|
-    var self = this;
-    var octave = evt[\octave];
-
-    switch (cb.asSymbol,
-      \asInt, {
-        self = self.asInt;
-      },
-      \asChord, {
-        var sself = self.asString;
-        var ch = Chord.names.reject{ |ch| sself.findRegexp(ch.asString++"$").size == 0 }.pop;
-        if ( ch.notNil ) {
-          self = Note(sself.replace(ch.asString, "").asSymbol).degree + Chord(ch);
-        } {
-          self = \rest;
-        }
-      },
-      // soon to be gone.
-      \asSemitone, { self = Note(self).degree; },
-      \asDegree, {
-        self = Note(self).degree;
-      },
-      \asFreq, {
-        self = Note(self).freq(octave);
-      },
-      \asCC, {
-        self = self.asFloat.midirange;
-      },
-      // Requires `PercSymbol`
-      \asPerc, {
-        self = [self].asGMPerc;
-      },
-      \asFn, {
-        if (evt[\fn].notNil) {
-          self = evt[\fn].value(self, evt);
-        }
-      }
-    );
-
-    ^self;
-  }
-
   maybeRepeat {
     var item = this.asString;
 
@@ -109,25 +45,48 @@
     ^item;
   }
 
-  distributeInTime {
+  createEvent {
+    |cb, oct=5|
+
     var acc, size, dur, time, octave;
     var pattern = this.asString;
+    var events = [];
+
+    oct = oct.asInt;
+    cb = cb.asSymbol;
 
     pattern = pattern.split($ ).reject { |x| x.asString.size < 1 };
     size = pattern.size;
     dur = 1/size;
     pattern = pattern.collect(_.maybeSubdivide);
-    octave = pattern.collect{ |sub| if (sub.isKindOf(String)) { sub.maybeShiftOctave; } { sub.collect(_.maybeShiftOctave) } };
-    time = pattern.collect{ |sub| if (sub.isKindOf(String)) { dur; } { (dur/sub.size).dup(sub.size); } };
-    acc = pattern.collect{ |sub| if (sub.isKindOf(String)) { sub.maybeAccent; } { sub.collect(_.maybeAccent) } };
-    pattern = pattern.collect{ |sub| if (sub.isKindOf(String)) { sub.maybeCleanUp; } { sub.collect(_.maybeCleanUp) } };
+    octave = pattern.collect{ |sub| if (sub.isKindOf(String)) { sub.maybeShiftOctave; } { sub.collect(_.maybeShiftOctave) } }.flat;
+    time = pattern.collect{ |sub| if (sub.isKindOf(String)) { dur; } { (dur/sub.size).dup(sub.size); } }.flat;
+    acc = pattern.collect{ |sub| if (sub.isKindOf(String)) { sub.maybeAccent; } { sub.collect(_.maybeAccent) } }.flat;
+    pattern = pattern.collect{ |sub| if (sub.isKindOf(String)) { sub.maybeCleanUp; } { sub.collect(_.maybeCleanUp) } }.flat;
 
-    ^(
-      accent: acc.flat,
-      time: time.flat,
-      oct: octave.flat,
-      pattern: pattern.flat,
-    )
+    pattern.collect {
+      |val, idx|
+      var evt_oct = octave[idx] + oct;
+      val = switch(cb,
+        \perc, { val.perc },
+        \degree, { Note(val).midi(evt_oct) },
+        \freq, { Note(val).freq(evt_oct) },
+        \int, { val.asInt },
+        \chord, {
+          var self = val.asString;
+          var ch = Chord.names.reject{ |ch| self.findRegexp(ch.asString++"$").size == 0 }.pop;
+          if ( ch.notNil ) {
+            Note(self.replace(ch.asString, "").asSymbol).midi(evt_oct) + Chord(ch) ;
+          } {
+            \rest;
+          }
+        }
+      );
+
+      events = events.add( (accent: acc[idx], dur: time[idx], octave: evt_oct, midinote: val) )
+    };
+
+    ^events;
   }
 
 }
@@ -139,15 +98,16 @@
   }
 
   // requires `Bjorklund` Quark.
-  asBjorklund {
+  bjorklund {
     |k, n, rotate=0|
+    var hit = Pseq(this.split($ ), inf).asStream;
+
     ^Bjorklund(k, n)
     .rotate(rotate)
-    .collect { |p| if (p.asBoolean) { this.replace(" ", "+").asSymbol } { \r } }
-    .flat.join(" ")
+    .collect { |p| if (p.asBoolean) { hit.next } { \r } }
+    .join(" ")
     ;
   }
-  bj { |k n rot=0| ^this.asBjorklund(k, n, rot); }
 
   maybeCleanUp {
     ^this
@@ -179,8 +139,8 @@
     ^item;
   }
 
-  parseRepetitionPattern {
-    // var regexp = "([\\w\\.\\'\\,!?@?\\+?(\\*\d+)? ]+)";
+  repetitionPattern {
+    |cb, oct=5|
     var regexp = "([\\w\\.\\/\\'\\,!?@?\\+?(\\*\d+)? ]+)";
 
     ^this
@@ -194,22 +154,10 @@
     .collect(_.asSymbol)
     .collect(_.maybeRepeat)
     .collect(_.maybeSplit)
-    .collect(_.distributeInTime)
+    .collect(_.createEvent(cb, oct))
+    .pop
     ;
   }
-
-  asRepetition {
-    |... pbd|
-    ^this.parseRepetitionPattern.pop.asPbind(pbd);
-  }
-  rp { |... pbd| ^this.asRepetition(pbd); }
-
-  asGroupRepetition {
-    |... pbd|
-    ^Ppar(this.parseRepetitionPattern.collect{ |pat| pat.asPbind(pbd); }.asArray, inf);
-  }
-  grp { |... pbd| ^this.asGroupRepetition(pbd); }
-
 
   /*
   Based on Steven Yi's Hex Beats.
@@ -231,41 +179,22 @@
     }.flat;
   }
 
+  // Repetition parsing shortcuts
+  perc { ^this.repetitionPattern(\perc, 0); }
+  degree { |oct=5| ^this.repetitionPattern(\degree, oct); }
+  freq { |oct=5| ^this.repetitionPattern(\freq, oct); }
+  int { |oct=5| ^this.repetitionPattern(\int, oct); }
+  chord { |oct=5| ^this.repetitionPattern(\chord, oct); }
+
 }
 
 + Dictionary {
 
-  asPbind {
-    |... pbd|
-    ^Pchain(Prepetition(), Pbind(*(this.getPairs ++ pbd.flat)));
-    // I'll leave this out for now until I find a better solution.
-    //
-    // if (cc.notNil) {
-    //   pbindcc = cc
-    //   .asDict.keys()
-    //   .collect {
-    //     |key|
-    //     var ctrl = cc[cc.indexOfEqual(key)+1];
-    //     Pbind(\type, \cc, \chan, dict.at(\chan), \dur, dict.at(\ccdur) ?? 1, \ctlNum, key, \control, ctrl);
-    //   }
-    //   .asArray
-    //   ;
-    //
-    //   ^Ppar(pbindcc ++ pchain.asArray);
-    // } {
-    //   ^pchain;
-    // }
+  // midi
+  midichannel { |chan| ^this.blend( ( type:\md, chan:chan) ); }
 
-  }
-  pb { |... pbd| ^this.asPbind(pbd); }
-
-}
-
-+ Array {
-
-  drawPattern {
-    ^this.collect{ |each| each.pattern.collect{ |p| if (p.isRest) { "." } { "x" } }.join(" ") }.join("\n");
-  }
+  // synths
+  usingsynth { |synth| ^this.blend( ( type:\note, instrument:synth) ); }
 
 }
 
@@ -282,46 +211,80 @@
     ^result.asArray;
   }
 
-  asPseq {
+  pseq {
     |rep = inf, offs = 0|
     ^Pseq(this, rep, offs);
   }
-  ps { |rep=inf offs=0| ^this.asPseq(rep, offs) }
 
-  asPshuf {
+  pshuf {
     |rep = inf|
     ^Pshuf(this, rep);
   }
-  psh { |rep=inf| ^this.asPshuf(rep) }
 
-  asPrand {
+  prand {
     |rep = inf|
     ^Prand(this, rep);
   }
-  pr { |rep=inf| ^this.asPrand(rep) }
 
-  asPxrand {
+  pxrand {
     |rep = inf|
     ^Pxrand(this, rep);
   }
-  px { |rep=inf| ^this.asPxrand(rep) }
 
-  asPwrand {
+  pwrand {
     |weights, rep = inf|
     weights = weights ?? [(1 / this.size) ! this.size].normalizeSum;
     ^Pwrand(this, weights, rep);
   }
-  pw { |weights rep=inf| ^this.asPwrand(weights, rep) }
 
-  asPlace {
+  place {
     |rep = inf, offs = 0|
     ^Place(this, rep, offs);
   }
-  pl { |rep = inf, offs = 0| ^this.asPlace(rep, offs) }
 
 
 }
 
++ Array {
+
+  // midi channels
+  ch1 { ^this.collect(_.midichannel(1)); }
+  ch2 { ^this.collect(_.midichannel(2)); }
+  ch3 { ^this.collect(_.midichannel(3)); }
+  ch4 { ^this.collect(_.midichannel(4)); }
+  ch5 { ^this.collect(_.midichannel(5)); }
+  ch6 { ^this.collect(_.midichannel(6)); }
+  ch7 { ^this.collect(_.midichannel(7)); }
+  ch8 { ^this.collect(_.midichannel(8)); }
+  ch9 { ^this.collect(_.midichannel(9)); }
+  ch10 { ^this.collect(_.midichannel(10)); }
+  ch11 { ^this.collect(_.midichannel(11)); }
+  ch12 { ^this.collect(_.midichannel(12)); }
+  ch13 { ^this.collect(_.midichannel(13)); }
+  ch14 { ^this.collect(_.midichannel(14)); }
+  ch15 { ^this.collect(_.midichannel(15)); }
+  ch16 { ^this.collect(_.midichannel(16)); }
+
+  //using synthdef
+  synth { |synthdef=\default| ^this.collect(_.usingsynth(synthdef)); }
+
+  // functions to apply over a pattern
+  mute { ^this.collect(_.merge((amp: 0), { 0 })); }
+  stut { |times=2| ^this.collect(_.dup(times)).flat; }
+  stretch { |n| ^this.collect(_.blend( (stretch: n) ) ); }
+  fast { |n| ^this.stretch(1/n); }
+  slow { |n| ^this.stretch(n); }
+
+  duration { |time=0.25| ^this.collect(_.merge((dur: time), { time })); }
+
+  with {
+    |... args|
+    var dct = ();
+    dct.putPairs(args);
+    ^this.collect(_.blend(dct) );
+  }
+
+}
 
 + Float {
 
