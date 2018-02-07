@@ -46,12 +46,11 @@
   }
 
   createEvent {
-    |cb, oct=5|
+    |cb, oct=5, fn=nil|
 
     var acc, size, dur, time, octave;
     var pattern = this.asString;
     var events = [];
-
     oct = oct.asInt;
     cb = cb.asSymbol;
 
@@ -72,6 +71,11 @@
         \degree, { Note(val).midi(evt_oct) },
         \freq, { Note(val).freq(evt_oct) },
         \int, { val.asInt },
+        \fn, {
+          var self = val;
+          if (fn.notNil) { self = fn.value(val, pattern); };
+          self;
+        },
         \chord, {
           var self = val.asString;
           var ch = Chord.names.reject{ |ch| self.findRegexp(ch.asString++"$").size == 0 }.pop;
@@ -140,7 +144,7 @@
   }
 
   repetitionPattern {
-    |cb, oct=5|
+    |cb, oct=5, fn|
     var regexp = "([\\w\\.\\/\\'\\,!?@?\\+?(\\*\d+)? ]+)";
 
     ^this
@@ -154,7 +158,7 @@
     .collect(_.asSymbol)
     .collect(_.maybeRepeat)
     .collect(_.maybeSplit)
-    .collect(_.createEvent(cb, oct))
+    .collect(_.createEvent(cb, oct, fn))
     .pop
     ;
   }
@@ -185,6 +189,7 @@
   freq { |oct=5| ^this.repetitionPattern(\freq, oct); }
   int { |oct=5| ^this.repetitionPattern(\int, oct); }
   chord { |oct=5| ^this.repetitionPattern(\chord, oct); }
+  fn{ |fn| ^this.repetitionPattern(\fn, 0, fn); }
 
 }
 
