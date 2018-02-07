@@ -248,22 +248,23 @@
 + Array {
 
   // midi channels
-  ch1 { ^this.collect(_.midichannel(1)).pseq; }
-  ch2 { ^this.collect(_.midichannel(2)).pseq; }
-  ch3 { ^this.collect(_.midichannel(3)).pseq; }
-  ch4 { ^this.collect(_.midichannel(4)).pseq; }
-  ch5 { ^this.collect(_.midichannel(5)).pseq; }
-  ch6 { ^this.collect(_.midichannel(6)).pseq; }
-  ch7 { ^this.collect(_.midichannel(7)).pseq; }
-  ch8 { ^this.collect(_.midichannel(8)).pseq; }
-  ch9 { ^this.collect(_.midichannel(9)).pseq; }
-  ch10 { ^this.collect(_.midichannel(10)).pseq; }
-  ch11 { ^this.collect(_.midichannel(11)).pseq; }
-  ch12 { ^this.collect(_.midichannel(12)).pseq; }
-  ch13 { ^this.collect(_.midichannel(13)).pseq; }
-  ch14 { ^this.collect(_.midichannel(14)).pseq; }
-  ch15 { ^this.collect(_.midichannel(15)).pseq; }
-  ch16 { ^this.collect(_.midichannel(16)).pseq; }
+  ch { |channel=9| ^this.collect(_.midichannel(channel)).pseq; }
+  ch1 { ^this.ch(1); }
+  ch2 { ^this.ch(2); }
+  ch3 { ^this.ch(3); }
+  ch4 { ^this.ch(4); }
+  ch5 { ^this.ch(5); }
+  ch6 { ^this.ch(6); }
+  ch7 { ^this.ch(7); }
+  ch8 { ^this.ch(8); }
+  ch9 { ^this.ch(9); }
+  ch10 { ^this.ch(10); }
+  ch11 { ^this.ch(11); }
+  ch12 { ^this.ch(12); }
+  ch13 { ^this.ch(13); }
+  ch14 { ^this.ch(14); }
+  ch15 { ^this.ch(15); }
+  ch16 { ^this.ch(16); }
 
   //using synthdef
   synth { |synthdef=\default| ^this.collect(_.usingsynth(synthdef)).pseq; }
@@ -273,8 +274,12 @@
   stretch { |n| ^this.collect(_.blend( (stretch: n) ) ); }
   fast { |n| ^this.stretch(1/n); }
   slow { |n| ^this.stretch(n); }
+  freeze { |idx, times=2|
+    var frozen = this.at(idx).dup(times);
+    ^this.put(idx, frozen).flat;
+  }
 
-  duration { |time=0.25| ^this.collect(_.merge((dur: time), { time })); }
+  duration { |time=0.25| ^this.collect(_.merge((dur: time), { |a, b| b })); }
 
   with {
     |... args|
