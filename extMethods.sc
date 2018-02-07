@@ -68,7 +68,7 @@
       |val, idx|
       var evt_oct = octave[idx] + oct;
       val = switch(cb,
-        \perc, { val.perc },
+        \perc, { val.asGMPerc },
         \degree, { Note(val).midi(evt_oct) },
         \freq, { Note(val).freq(evt_oct) },
         \int, { val.asInt },
@@ -246,6 +246,16 @@
 }
 
 + Array {
+
+  // Scale.xxx.chords
+  event {
+    |octave=5|
+    ^this.collect {
+      |val|
+      (accent: 0, dur: 1, octave: octave, midinote: val + (12 * octave))
+    }
+  }
+
 
   // midi channels
   ch { |channel=9| ^this.collect(_.midichannel(channel)).pseq; }

@@ -8,7 +8,6 @@ A set of tools for building a List of Events. Inspired by TidalCycles.
 
 note::
 This software is sort of experimental, mainly an exploration of SuperCollider + Live Coding.
-
 ::
 
 
@@ -64,7 +63,7 @@ LIST::
 ## code::\int::, converts to integer
 ::
 
-These callbacks can be used by passing them as the 1st argument of
+These callbacks have a shortcut version in the form of a method.
 
 code::
 "bd sn".repetitionPattern(\perc);
@@ -111,6 +110,31 @@ code::
 ]
 ::
 
+Also, there's a particular method called code::.event:: which works over a list of Int or individual Ints.
+
+code::
+[0,4,7].events;
+-> [
+  ( 'octave': 5, 'dur': 1, 'accent': 0, 'midinote': 60 ),
+  ( 'octave': 5, 'dur': 1, 'accent': 0, 'midinote': 64 ),
+  ( 'octave': 5, 'dur': 1, 'accent': 0, 'midinote': 67 )
+]
+::
+
+code::
+Scale.major.chordProgression(\sad);
+-> [ [ 0, 4, 7 ], [ 5, 9, 12 ], [ 7, 11, 14 ], [ 7, 11, 14 ] ]
+
+Scale.major.chordProgression(\sad).events(5); // the argument is the Octave
+-> [
+  ( 'octave': 5, 'dur': 1, 'accent': 0, 'midinote': [ 60, 64, 67 ] ),
+  ( 'octave': 5, 'dur': 1, 'accent': 0, 'midinote': [ 65, 69, 72 ] ),
+  ( 'octave': 5, 'dur': 1, 'accent': 0, 'midinote': [ 67, 71, 74 ] ),
+  ( 'octave': 5, 'dur': 1, 'accent': 0, 'midinote': [ 67, 71, 74 ] )
+]
+::
+
+
 
 SUBSECTION:: Bjorklund / Euclidean Rhythm
 
@@ -119,17 +143,16 @@ By taking advantage of the link::Classes/Bjorklund:: Quark, we are able to gener
 For example:
 
 code::
-"bd".bjorklund(4, 16).quote;
+"bd".bjorklund(4,16).quote;
 -> "bd r r r bd r r r bd r r r bd r r r"
 ::
 
 code::
-"bd".bjorklund(4, 16, 2).quote;
+"bd".bjorklund(4,16,2).quote;
 -> "r r bd r r r bd r r r bd r r r bd r"
 ::
 
-Additionally, it's possible to pass more than one 'symbol' to a Bjorklund rhythm, such as "sn rm", which will distribute these symbols to each 'hit'. Therefore
-creating a more coherent pattern.
+Additionally, it's possible to pass more than one 'symbol' to a Bjorklund rhythm, such as "sn rm", which will be distributed to each 'hit'. Therefore creating a more coherent pattern.
 
 For example:
 
@@ -159,7 +182,7 @@ This method works with any kind of 'callback'.
 
 SUBSECTION:: External Methods
 
-Each pattern holds the minimum information possible, such as note and duration, but normally we need to add more data to each pattern or do something with all of them. Think of modifying amplitude, synth parameters, envelope values, etc.
+Each pattern holds the minimum information possible, such as note and duration, but normally we need to add more data to each Event or do something with all of them. Think of modifying amplitude, synth parameters, envelope values, etc.
 
 In order to do that, there's this list of methods that can be applied:
 
@@ -170,15 +193,19 @@ LIST::
 ## code::slow(n)::, shortcut for code::.stretch(n)::.
 ## code::freeze(idx, times)::, at index code::idx::, will code::dup:: the amount of code::times::.
 ## code::duration(time)::, overwrites the duration of each Event to code::time::.
-## code::with(... args)::, allows to overwrite any argument of each Event. Uses similar syntax as Pbind.
+## code::with(... args)::, allows to overwrite any argument of each Event. Uses similar syntax as link::Classes/Pbind::.
 ::
 
 Also, since we're working with a link::Classes/List:: of Events, pretty much any method that can be applied to a link::Classes/List::, can be applied here as well.
 
+Example:
 
 
 code::
-"bd sn".perc.fast(2).with(\amp, 0.9, \sustain, 2);
+"bd sn".perc
+.fast(2) // stretch 1/2, therefore dur (0.5) * stretch (0.5) = delta 0.25
+.with(\amp, 0.9, \sustain, 2) // adds \amp, and \sustain to each event
+;
 -> [
   ( 'octave': 0, 'dur': 0.5, 'amp': 0.9, 'midinote': 36, 'sustain': 2, 'stretch': 0.5, 'accent': 0 ),
   ( 'octave': 0, 'dur': 0.5, 'amp': 0.9, 'midinote': 38, 'sustain': 2, 'stretch': 0.5, 'accent': 0 )
@@ -186,8 +213,37 @@ code::
 ::
 
 
+code::
+"bd sn cp".perc
+.slow(2) // stretch 2. dur (0.5) * stretch (2) = delta 1
+.freeze(1,4) // the event at index 1, cloned 4 times.
+-> [
+( 'octave': 0, 'dur': 0.33333333333333, 'midinote': 36, 'stretch': 2, 'accent': 0 ),
+( 'octave': 0, 'dur': 0.33333333333333, 'midinote': 38, 'stretch': 2, 'accent': 0 ),
+( 'octave': 0, 'dur': 0.33333333333333, 'midinote': 38, 'stretch': 2, 'accent': 0 ),
+( 'octave': 0, 'dur': 0.33333333333333, 'midinote': 38, 'stretch': 2, 'accent': 0 ),
+( 'octave': 0, 'dur': 0.33333333333333, 'midinote': 38, 'stretch': 2, 'accent': 0 ),
+( 'octave': 0, 'dur': 0.33333333333333, 'midinote': 39, 'stretch': 2, 'accent': 0 )
+]
+::
 
-Also, I've added the most common link::Classes/Pattern:: classes as methods, there isn't a really good reason other than it's more comfortable to type when chaining methods.
+
+code::
+"bd sn cp".perc.slow(2).freeze(1,4) // same as before but
+.scramble // now it's shuffled
+-> [
+( 'octave': 0, 'dur': 0.33333333333333, 'midinote': 38, 'stretch': 2, 'accent': 0 )
+( 'octave': 0, 'dur': 0.33333333333333, 'midinote': 38, 'stretch': 2, 'accent': 0 )
+( 'octave': 0, 'dur': 0.33333333333333, 'midinote': 36, 'stretch': 2, 'accent': 0 )
+( 'octave': 0, 'dur': 0.33333333333333, 'midinote': 38, 'stretch': 2, 'accent': 0 )
+( 'octave': 0, 'dur': 0.33333333333333, 'midinote': 38, 'stretch': 2, 'accent': 0 )
+( 'octave': 0, 'dur': 0.33333333333333, 'midinote': 39, 'stretch': 2, 'accent': 0 )
+]
+::
+
+
+
+Also, I've added the most common link::Classes/ListPattern:: classes as methods, there isn't a really good reason other than it's more comfortable to type when chaining methods.
 
 code::
 (
@@ -228,7 +284,7 @@ x.nextN(5);
 
 SUBSECTION:: Actually playing something.
 
-So far we learnt how to create a List of Events. And now we'll learn how to create sounds from it.
+So far we learnt how to create a List of Events, how to add data to each and how to mangle that List. And now we'll learn how to create sounds from it.
 
 code::
 (
@@ -355,7 +411,13 @@ Channel number
 returns:: link::Classes/Repetition::
 
 
-METHOD:: getProxySpace
+METHOD:: proxySpace
 Returns the link::Classes/ProxySpace:: instance
 
 returns:: link::Classes/ProxySpace::
+
+
+METHOD:: server
+Returns the link::Classes/Server:: instance
+
+returns:: link::Classes/Server::
