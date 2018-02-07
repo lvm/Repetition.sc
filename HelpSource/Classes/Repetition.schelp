@@ -157,25 +157,11 @@ code::
 This method works with any kind of 'callback'.
 
 
-SUBSECTION:: Custom MIDI Event Types
-
-Currently, link::Classes/Repetition:: provides two custom link::Classes/Event:: types: code::\md:: and code::\cc::. Both are a simplification of a normal link::Classes/Event:: type code::\midi:: declaring by default code::~type::, code::~midiout::, code::~chan:: (code::9:: by default) and code::~amp::.
-To use them you just need to call code::Repetition.initMIDI:: and code::Repetition.midiEventTypes:: .
-Example:
-
-code::
-(
-r = Repetition.new;
-m = r.initMIDI("Midi Through", "Midi Through Port-0");
-r.midiEventTypes;
-)
-::
-
-
 SUBSECTION:: External Methods
 
-Since we're working with a link::Classes/List:: of Events, pretty much any method that can be applied to a link::Classes/List::, can be applied here as well.
-In addition to that, there's this list of methods that can be applied to:
+Each pattern holds the minimum information possible, such as note and duration, but normally we need to add more data to each pattern or do something with all of them. Think of modifying amplitude, synth parameters, envelope values, etc.
+
+In order to do that, there's this list of methods that can be applied:
 
 LIST::
 ## code::mute()::, overwrites the amplitude of each Event to zero.
@@ -187,19 +173,16 @@ LIST::
 ## code::with(... args)::, allows to overwrite any argument of each Event. Uses similar syntax as Pbind.
 ::
 
+Also, since we're working with a link::Classes/List:: of Events, pretty much any method that can be applied to a link::Classes/List::, can be applied here as well.
 
 
-Each pattern holds the minimum information possible, such as note and duration, but normally we need to add more data to each pattern to become something "useful" (think of amplitude, synth parameters, envelope values, etc).
 
 code::
-(
-~x =  // this is the nodeproxy
-"bd sn" // and our simple pattern
-.bjorklund(3,8) // converted to a a bjorklund rhythm
-.perc // and now converted to a List of Events
-.with(\amp, 0.9) // which now each Event has an addition argument, \amp, with a value of `0.9`
-.ch(9) // and finally each one goes to MIDI Channel 9
-)
+"bd sn".perc.fast(2).with(\amp, 0.9, \sustain, 2);
+-> [
+  ( 'octave': 0, 'dur': 0.5, 'amp': 0.9, 'midinote': 36, 'sustain': 2, 'stretch': 0.5, 'accent': 0 ),
+  ( 'octave': 0, 'dur': 0.5, 'amp': 0.9, 'midinote': 38, 'sustain': 2, 'stretch': 0.5, 'accent': 0 )
+]
 ::
 
 
@@ -258,6 +241,20 @@ code::
 )
 ::
 
+
+SUBSECTION:: Custom MIDI Event Types
+
+Currently, link::Classes/Repetition:: provides two custom link::Classes/Event:: types: code::\md:: and code::\cc::. Both are a simplification of a normal link::Classes/Event:: type code::\midi:: declaring by default code::~type::, code::~midiout::, code::~chan:: (code::9:: by default) and code::~amp::.
+To use them you just need to call code::Repetition.initMIDI:: and code::Repetition.midiEventTypes:: .
+Example:
+
+code::
+(
+r = Repetition.new;
+m = r.initMIDI("Midi Through", "Midi Through Port-0");
+r.midiEventTypes;
+)
+::
 
 
 SUBSECTION:: Booting up
