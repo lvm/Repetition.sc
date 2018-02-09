@@ -191,6 +191,7 @@
   chord { |oct=5| ^this.repetitionPattern(\chord, oct); }
   fn{ |fn| ^this.repetitionPattern(\fn, 0, fn); }
 
+  shuffle { ^this.split($ ).scramble.join(" "); }
 }
 
 + Dictionary {
@@ -317,6 +318,8 @@
     .flat
     ;
   }
+ 
+  shuffle { ^this.scramble; }
 
 }
 
