@@ -253,7 +253,7 @@
 + Array {
 
   // Scale.xxx.chords
-  event {
+  events {
     |octave=5|
     ^this.collect {
       |val|
@@ -301,6 +301,21 @@
     var dct = ();
     dct.putPairs(args);
     ^this.collect(_.blend(dct) );
+  }
+
+  every {
+    |times, callback|
+    ^this
+    .collect{
+      |item, idx|
+      if (idx % times == 0) {
+        callback.(item);
+      } {
+        item
+      }
+    }
+    .flat
+    ;
   }
 
 }

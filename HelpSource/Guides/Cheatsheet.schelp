@@ -5,7 +5,14 @@ related:: Classes/Repetition
 
 Things to remember in case I forget everything.
 
-section:: Useful Classes
+section:: Useful Classes and UGens
+
+code::
+Event;
+List;
+Dictionary;
+SequenceableCollection;
+::
 
 code::
 // SIGNALS
@@ -22,6 +29,12 @@ FSinOsc.ar(freq, iphase, mul);
 Decimator.ar(in, rate, bits, mul, add);
 // Basic Reverb. See JPVerb or GVerb.
 FreeVerb.ar(in, mix, room, damp, mul, add);
+// Signal Degradation
+WaveLoss.ar(in, drop, outof, mode, mul, add);
+// Pitch shift
+Squiz.ar(in, pitchratio, zcperchunk, memlen, mul, add);
+// Granular pitch shift
+PitchShift.ar(in, windowSize, pitchRatio, pitchDispersion, timeDispersion, mul, add);
 // All pass delay w/ linear interpolation.
 AllpassL.ar(in, maxdelaytime, delaytime, decaytime, mul, add);
 // Simple delay w/ linear interpolation.
