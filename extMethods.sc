@@ -318,7 +318,7 @@
     .flat
     ;
   }
- 
+
   shuffle { ^this.scramble; }
 
   stochastic {
@@ -326,7 +326,7 @@
     ^this
     .collect{
       |item, idx|
-      if (chance) {
+      if (chance.coin) {
         callback.(item);
       } {
         item
@@ -335,9 +335,9 @@
     .flat
     ;
   }
-  rarely { |callback| ^this.stochastic(0.25.coin, callback); }
-  sometimes { |callback| ^this.stochastic(0.5.coin, callback); }
-  regularly { |callback| ^this.stochastic(0.75.coin, callback); }
+  rarely { |callback| ^this.stochastic(0.25, callback); }
+  sometimes { |callback| ^this.stochastic(0.5, callback); }
+  regularly { |callback| ^this.stochastic(0.75, callback); }
 
   shuffle { ^this.scramble; }
 }
