@@ -318,6 +318,8 @@
     .flat
     ;
   }
+ 
+  shuffle { ^this.scramble; }
 
   stochastic {
     |chance, callback|
