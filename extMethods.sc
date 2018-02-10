@@ -191,6 +191,7 @@
   chord { |oct=5| ^this.repetitionPattern(\chord, oct); }
   fn{ |fn| ^this.repetitionPattern(\fn, 0, fn); }
 
+  shuffle { ^this.split($ ).scramble.join(" "); }
 }
 
 + Dictionary {
@@ -284,7 +285,7 @@
   //using synthdef
   synth { |synthdef=\default| ^this.collect(_.usingsynth(synthdef)).pseq; }
 
-  // functions to apply over a pattern
+  // functions to apply over a List of Events
   mute { ^this.collect(_.merge((amp: 0), { 0 })); }
   stretch { |n| ^this.collect(_.blend( (stretch: n) ) ); }
   fast { |n| ^this.stretch(1/n); }
@@ -318,6 +319,25 @@
     ;
   }
 
+  stochastic {
+    |chance, callback|
+    ^this
+    .collect{
+      |item, idx|
+      if (chance) {
+        callback.(item);
+      } {
+        item
+      }
+    }
+    .flat
+    ;
+  }
+  rarely { |callback| ^this.stochastic(0.25.coin, callback); }
+  sometimes { |callback| ^this.stochastic(0.5.coin, callback); }
+  regularly { |callback| ^this.stochastic(0.75.coin, callback); }
+
+  shuffle { ^this.scramble; }
 }
 
 + Float {
