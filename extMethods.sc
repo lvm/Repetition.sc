@@ -68,7 +68,7 @@
   }
 
   parseEvents {
-    |typeOf=nil, amp=0.9, oct=5|
+    |typeOf=nil, oct=5, amp=0.9|
 
     var acc, size, dur, time, octave;
     var pattern = this.asString;
@@ -158,7 +158,7 @@
   }
 
   repetitionPattern {
-    |typeOf=nil, amp=0.666, oct=5|
+    |typeOf=nil, oct=5, amp=0.9|
     var regexp = "([\\w\\.\\|\\/\\'\\,!?@?\\+?(\\*\d+)? ]+)";
 
     ^this
@@ -172,7 +172,7 @@
     .collect(_.asSymbol)
     .collect(_.maybeRepeat)
     .collect(_.maybeSplit)
-    .collect(_.parseEvents(typeOf, amp, oct))
+    .collect(_.parseEvents(typeOf, oct, amp))
     .pop
     ;
   }
@@ -198,11 +198,11 @@
   }
 
   // Repetition parsing shortcuts
-  perc { |amp=0.9| ^this.repetitionPattern(\perc, amp, 0); }
-  degree { |amp=0.7, oct=5| ^this.repetitionPattern(\degree, amp, oct); }
-  chord { |amp=0.7, oct=5| ^this.repetitionPattern(\chord, amp, oct); }
-  freq { |amp=0.7, oct=5| ^this.repetitionPattern(\freq, amp, oct); }
-  int { |amp=0.7, oct=5| ^this.repetitionPattern(\int, amp, oct); }
+  perc { |amp=0.9| ^this.repetitionPattern(\perc, 0, amp); }
+  degree { |oct=5, amp=0.9| ^this.repetitionPattern(\degree, oct, amp); }
+  chord { |oct=5, amp=0.9| ^this.repetitionPattern(\chord, oct, amp); }
+  freq { |oct=5, amp=0.9| ^this.repetitionPattern(\freq, oct, amp); }
+  int { |oct=5, amp=0.9| ^this.repetitionPattern(\int, oct, amp); }
   // fn{ |fn| ^this.repetitionPattern(\fn, 0, fn); }
 
   shuffle { ^this.split($ ).scramble.join(" "); }
@@ -222,15 +222,19 @@
   minus { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a-b }); }
   mul { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a*b }); }
   div { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a/b }); }
+  mute { ^this.with([\amp, 0]); }
+  stretch { |n| ^this.with([\stretch, n]); }
+  fast { |n| ^this.stretch(1/n); }
+  slow { |n| ^this.stretch(n); }
 
   applyAmplitude {
-    |amp=0.666|
+    |amp=0.9|
     var symbol = this.at(\symbol), shift = 0;
 
     if (symbol.isKindOf(List)) {
-      if (symbol.reject{ |x| x.asString.contains("@").not }.size.asBoolean) { shift = 0.25 }
+      if (symbol.reject{ |x| x.asString.contains("@").not }.size.asBoolean) { shift = amp/4 }
     } {
-      if (symbol.asString.contains("@")) { shift = 0.25 }
+      if (symbol.asString.contains("@")) { shift = amp/4 }
     };
 
     ^this
@@ -270,8 +274,13 @@
       }
       ;
 
-      ^this
-      .merge((midinote: midinote), {|a,b| b })
+      if (typeOf.asSymbol == \freq) {
+        ^this
+        .merge((freq: midinote), {|a,b| b })
+      } {
+        ^this
+        .merge((midinote: midinote), {|a,b| b })
+      }
       ;
     } {
       ^nil;
@@ -323,40 +332,40 @@
     ^Place(this, rep, offs);
   }
 
-  // Scale.xxx.chords
-  events {
-    |octave=5|
+  // Scale.xxx
+  asEvents {
+    |amp=0.9, octave=5|
     ^this.collect {
       |val|
-      (accent: 0, dur: 1, octave: octave, midinote: val + (12 * octave))
+      (octave: octave, dur: 1, amp: amp, midinote: val + (12 * octave))
     }
   }
 
   // midi channels
-  ch { |channel=9| ^this.collect(_.midichannel(channel)).pseq; }
-  ch1 { ^this.ch(1); }
-  ch2 { ^this.ch(2); }
-  ch3 { ^this.ch(3); }
-  ch4 { ^this.ch(4); }
-  ch5 { ^this.ch(5); }
-  ch6 { ^this.ch(6); }
-  ch7 { ^this.ch(7); }
-  ch8 { ^this.ch(8); }
-  ch9 { ^this.ch(9); }
-  ch10 { ^this.ch(10); }
-  ch11 { ^this.ch(11); }
-  ch12 { ^this.ch(12); }
-  ch13 { ^this.ch(13); }
-  ch14 { ^this.ch(14); }
-  ch15 { ^this.ch(15); }
-  ch16 { ^this.ch(16); }
+  ch { |channel=9, rep=inf| ^this.collect(_.midichannel(channel)).pseq(rep); }
+  ch1 { |rep=inf| ^this.ch(1, rep); }
+  ch2 { |rep=inf| ^this.ch(2, rep); }
+  ch3 { |rep=inf| ^this.ch(3, rep); }
+  ch4 { |rep=inf| ^this.ch(4, rep); }
+  ch5 { |rep=inf| ^this.ch(5, rep); }
+  ch6 { |rep=inf| ^this.ch(6, rep); }
+  ch7 { |rep=inf| ^this.ch(7, rep); }
+  ch8 { |rep=inf| ^this.ch(8, rep); }
+  ch9 { |rep=inf| ^this.ch(9, rep); }
+  ch10 { |rep=inf| ^this.ch(10, rep); }
+  ch11 { |rep=inf| ^this.ch(11, rep); }
+  ch12 { |rep=inf| ^this.ch(12, rep); }
+  ch13 { |rep=inf| ^this.ch(13, rep); }
+  ch14 { |rep=inf| ^this.ch(14, rep); }
+  ch15 { |rep=inf| ^this.ch(15, rep); }
+  ch16 { |rep=inf| ^this.ch(16, rep); }
 
   //using synthdef
-  synth { |synthdef=\default| ^this.collect(_.usingsynth(synthdef)).pseq; }
+  synth { |synthdef=\default, rep=inf| ^this.collect(_.usingsynth(synthdef)).pseq(rep); }
 
   // functions to apply over a List of Events
-  mute { ^this.collect(_.with([\amp, 0])); }
-  stretch { |n| ^this.collect(_.with([\stretch, n])); }
+  mute { ^this.collect(_.mute); }
+  stretch { |n| ^this.collect(_.stretch(n)); }
   fast { |n| ^this.stretch(1/n); }
   slow { |n| ^this.stretch(n); }
   freeze { |idx, times=2|
@@ -385,7 +394,7 @@
     ;
   }
 
-  stochastic {
+  probability {
     |chance, callback|
     ^this
     .collect{
@@ -399,9 +408,9 @@
     .flat
     ;
   }
-  rarely { |callback| ^this.stochastic(0.25, callback); }
-  sometimes { |callback| ^this.stochastic(0.5, callback); }
-  regularly { |callback| ^this.stochastic(0.75, callback); }
+  rarely { |callback| ^this.probability(0.25, callback); }
+  sometimes { |callback| ^this.probability(0.5, callback); }
+  regularly { |callback| ^this.probability(0.75, callback); }
 
   shuffle { ^this.scramble; }
 }
