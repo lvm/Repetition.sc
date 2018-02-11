@@ -1,12 +1,8 @@
 # Repetition.sc
 
-*Heavily* inspired by TidalCycles. Consider this a (tiny) dialect that implements some of its features.
+A set of tools for building a `SequenceableCollection of Events`.
 
-## Quick intro
-
-In this little intro I'll go about how to setup Supercollider to get `Repetition.sc` working as smoothly as possible, there might be a couple of rough edges still and stuff that don't work properly (I hope not), so be patient and report an issue if that's the case :-)
-
-### Installation
+## Installation
 
 Simply open a new document on your SC IDE and type:
 
@@ -24,95 +20,59 @@ This should print something like this in the Post window:
     Repetition installed
     -> Quark: Repetition[0.1]
 
+## Getting started
 
-Notice: `FluidSynth` is not really a **dependency** and is useful only on GNU/Linux or macOS, but doesn't do any harm to have it installed.
-There's a repo where I try to maintain most of the classes/stuff I regularly use with lots of goodies called [SuperUtilities](https://github.com/lvm/SuperUtilities/), once again, not a dependency either but brings to the table a couple useful helpers such as:
+Once Repetition is properly installed and everything working correctly, type the following:
 
-* `ChordProg.sc`, a class with Chords, Progressions and some useful music theory stuff.
-* `Aconnect.sc`, an `aconnect` front end (GNU/Linux only).
-* `Tiny.sc`, a class to handle/autocomplete snippets.
-* `MidiEvents.sc`, Event types for MIDIOut patterns. Provides types `\md` and `\cc`.
-* `Tidal.sc`, a (really basic) `TidalCycles` interface.
-* `Pswing`, wrote by @[triss](https://github.com/triss/LiveCollider/blob/dev/patterns/classes/Pswing.sc) and lifted from Pattern Guide Cookbook 08: Swing.
-* `Pbindenmayer`, "Merge" a Pbind with a Prewrite.
-* Various methods:
-  * `.midiRange`, converts 0..1 to 0..127
-  * `.hexBeat`, based on [Steven Yi's Hex Beats](http://kunstmusik.com/2017/10/20/hex-beats/).
-
-To install this, simply clone the repository to your `Platform.userExtensionDir`.
-
-### Getting started
-
-Once Repetition is properly installed and everything working correctly, in a _blank document_ type the following:
-
-    // Create a Repetition instance, which will automatically boot the SuperCollider server + ProxySpace
+    (
     r = Repetition.new;
-    // Init MIDIClient if not running, and create MIDIOut instance which is assigned to `m`
     m = r.initMIDI("Midi Through", "Midi Through Port-0");
-    MIDIIn.connectAll;
-    r.midiEventTypes;  // create the custom midi event types
-    ProxyMixer(r.getProxySpace); // and a nice ProxyMixer
+    p = r.getProxySpace;
+
+    r.midiEventTypes;  // setup repetition midi stuff
+    ProxyMixer(p); // and a nice proxymixer too
+    )
 
 
 So, pretty much that's it.
 
 ## The *language*
 
-So far, i've implemented only these possibilities:
+The parser recognizes the following _symbols_:
 
-* Polyrhythms: `"a | b"`
-* Groups: `"a+b"`
-* Accents: `"a@"`
-* Shift octave up: `"a'"`
-* Shift octave down: `"a,"`
-* Repetition: `"a!"`
-* Multiplication: "`a*N`" (`N` -> `Int`)
+* Parallel: `a|b`, plays symbols simultaneously. Kind of a Chord.
+* Groups: `a+b`, plays symbols sharing the duration. If the duration is 1, each will have a duration of 1/2.
+* Accent: `a@`, sums a quarter of the original amplitude to it. That is: amplitude/4.
+* Shift octave up: `a'`, Current Octave +1.
+* Shift octave down: `a,`, Current Octave -1.
+* Repeat once: `a!`, Repeats the symbol once.
+* Repeat N times: `a*N` (`N -> Int`), Repeats symbols `N` times.
 
-Of course, all of this is "chainable".
-A more in-depth documentation is available in SCDoc formatm, browseable through the SCIde Help Browser.
-
-### Quick example
+All of them are "chainable". For example, a Pattern (ab)using every option available:
 
 ```
-"bd*3 | hq@+sn rm@! cp@".parseRepetitionPattern;
+"a*3 b@+c' d@!, e+f".repetitionPattern;
 -> [
-    ( 'pattern': [ bd, bd, bd ],
-      'accent': [ 0, 0, 0 ],
-      'time': [ 0.33333333333333, 0.33333333333333, 0.33333333333333 ],
-      'oct': [ 0, 0, 0 ],
-    ),
-    ( 'pattern': [ hq, sn, rm, rm, cp ],
-      'accent': [ 0.25, 0, 0.25, 0.25, 0.25 ],
-      'time': [ 0.125, 0.125, 0.25, 0.25, 0.25 ],
-      'oct': [ 0, 0, 0, 0, 0 ],
-    )
-   ]
+  ( 'octave': 5, 'dur': 0.14285714285714, 'symbol': a, 'amp': 0.666 ),
+  ( 'octave': 5, 'dur': 0.14285714285714, 'symbol': a, 'amp': 0.666 ),
+  ( 'octave': 5, 'dur': 0.14285714285714, 'symbol': a, 'amp': 0.666 ),
+  ( 'octave': 5, 'dur': 0.071428571428571, 'symbol': b@, 'amp': 0.916 ),
+  ( 'octave': 6, 'dur': 0.071428571428571, 'symbol': c', 'amp': 0.666 ),
+  ( 'octave': 4, 'dur': 0.14285714285714, 'symbol': d@,, 'amp': 0.916 ),
+  ( 'octave': 4, 'dur': 0.14285714285714, 'symbol': d@,, 'amp': 0.916 ),
+  ( 'octave': 5, 'dur': 0.071428571428571, 'symbol': e, 'amp': 0.666 ),
+  ( 'octave': 5, 'dur': 0.071428571428571, 'symbol': f, 'amp': 0.666 )
+]
 ```
 
 ```
 (
-~x = "0 0+3 7".asRepetition(\tempo, 60/60, \type, \md, \chan, 2, \amp, 0.75);
+~x =  "d e a d".degree(4, 0.25).synth(\default);
+~x.play;
 )
 ```
 
-Is equivalent to:
-
-```
-(
-var notes = "0 0+3 7".parseRepetitionPattern.pop;
-~x = Pbind(
-  \tempo, 60/60,
-  \type, \md,
-  \amp, Pseq(notes.amp, inf) + 0.75,
-  \dur, Pseq(notes.time, inf),
-  \midinote, Pseq(notes.pattern.collect(_.asInt), inf) + 60,
-  \sustain, Pkey(\dur),
-  \chan, 2,
-);
-)
-```
-
-When in doubt remember: Each pattern is parsed and finally converted to a `Pbind`, so whatever you normally do, you'll be able to do it using this small DSL.
+A more in-depth documentation is available in SCDoc format browseable through the SCIde Help Browser. If you feel anything is missing, don't hesitate to report an issue asking for clarification.
 
 
 ## Contributing
