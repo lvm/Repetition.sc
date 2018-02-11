@@ -1,8 +1,8 @@
 (
 \name: "Repetition.sc",
-\summary: "A SuperCollider interface to FluidSynth.",
+\summary: "A set of tools to build a SequenceableCollection of Events.",
 \author: "Mauro Lizaur",
-\version: 0.1,
+\version: 0.23,
 \organization: "buenos aires live code",
 \dependencies: ["https://github.com/lvm/PercSymbol", "https://github.com/lvm/FluidSynth.sc", "Bjorklund", ]
 )
