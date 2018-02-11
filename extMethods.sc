@@ -45,8 +45,30 @@
     ^item;
   }
 
+  asMIDINote {
+    |typeOf, octave=5|
+    var val = this;
+
+    ^switch(typeOf,
+      \perc, { val.asGMPerc },
+      \degree, { Note(val).midi(octave) },
+      \freq, { Note(val).freq(octave) },
+      \int, { val.asInt },
+      /*\fn, { var self = val; if (fn.notNil) { self = fn.value(val, pattern); }; self; },*/
+      \chord, {
+        var self = val.asString;
+        var ch = Chord.names.reject{ |ch| self.findRegexp(ch.asString++"$").size == 0 }.pop;
+        if ( ch.notNil ) {
+          Note(self.replace(ch.asString, "").asSymbol).midi(octave) + Chord(ch) ;
+        } {
+          \rest;
+        }
+      }
+    );
+  }
+
   parseEvents {
-    |typeOf, amp=0.9, oct=5|
+    |typeOf=nil, amp=0.9, oct=5|
 
     var acc, size, dur, time, octave;
     var pattern = this.asString;
@@ -65,61 +87,23 @@
     size = pattern.size;
     dur = 1/size;
 
-    // Then
+    // Then we can start building our `List of Events`:
     ^pattern
-    .collect(_.createSingleEvent(dur)) // based on the 'symbol', we'll create the Events with each duration.
-    // .collect(_.applyAmplitude(amp)) // then we add the amplitude
-
-    // .collect(_.with([\octave, oct]))
-    // .collect(_.with([\octave, oct]))  // then we add the octave
-
+    // based on the `symbol`, we'll create the Events with each duration.
+    .collect(_.createSingleEvent(dur))
+    // since we don't need to calculate the individual duration anymore, the `LoE` needs to be flattened to be able to apply functions over each Event.
     .flat
+    // then we add the amplitude. if the `symbol` has `@`,  will sum `0.25`
+    .collect(_.applyAmplitude(amp))
+    // then we add the octave
+    // if the `symbol` has `'`, will shift 1 octave up. if the 'symbol' has `,` will shift 1 octave down.
+    .collect(_.applyOctave(oct))
+    // now that everything is it's right place, we'll clean the symbols to
+    // finally, convert each Event to a proper MIDI note based on `typeOf` and the `symbol`.
+    .collect(_.applyMIDINote(typeOf))
+    // and to be sure, we'll remove everything that's not an Event.
+    .reject(_.isKindOf(Event).not)
     ;
-
-
-    // octave = pattern.collect{ |sub| if (sub.isKindOf(String)) { sub.maybeShiftOctave; } { sub.collect(_.maybeShiftOctave) } }.flat;
-    // time = dur.dup(size); //pattern.collect{ |sub| if (sub.isKindOf(String)) { dur; } { (dur/sub.size).dup(sub.size); } }.flat;
-    // time = pattern.collect{ |sub| if (sub.isKindOf(String)) { dur; } { (dur/sub.size).dup(sub.size); } }.flat;
-    // acc = pattern.collect{ |sub| if (sub.isKindOf(String)) { sub.maybeAccent; } { sub.collect(_.maybeAccent) } }.flat;
-    // pattern = pattern.collect{ |sub| if (sub.isKindOf(String)) { sub.maybeCleanUp; } { sub.collect(_.maybeCleanUp) } };
-
-    // "maybeParallel".postln;
-    // pattern.collect{ |sub| if (sub.isKindOf(String)) { sub.maybeParallel; } { sub } }.postln;
-    // pattern = pattern.collect(_.asSymbol);
-
-    // ("time:"+(time.size)).postln;
-    // time.postln;
-    // ("pattern:"+(pattern.size)).postln;
-    // pattern.postln;
-
-    // pattern.collect {
-    //   |val, idx|
-    //   var evt_oct = octave[idx] + oct;
-    //   val = switch(cb,
-    //     \perc, { val.asGMPerc },
-    //     \degree, { Note(val).midi(evt_oct) },
-    //     \freq, { Note(val).freq(evt_oct) },
-    //     \int, { val.asInt },
-    //     \fn, {
-    //       var self = val;
-    //       if (fn.notNil) { self = fn.value(val, pattern); };
-    //       self;
-    //     },
-    //     \chord, {
-    //       var self = val.asString;
-    //       var ch = Chord.names.reject{ |ch| self.findRegexp(ch.asString++"$").size == 0 }.pop;
-    //       if ( ch.notNil ) {
-    //         Note(self.replace(ch.asString, "").asSymbol).midi(evt_oct) + Chord(ch) ;
-    //       } {
-    //         \rest;
-    //       }
-    //     }
-    //   );
-    //
-    //   events = events.add( (accent: acc[idx], dur: time[idx], octave: evt_oct, midinote: val) )
-    // };
-    //
-    // ^events;
   }
 
 }
@@ -174,7 +158,7 @@
   }
 
   repetitionPattern {
-    |typeOf, amp=0.9, oct=5|
+    |typeOf=nil, amp=0.666, oct=5|
     var regexp = "([\\w\\.\\|\\/\\'\\,!?@?\\+?(\\*\d+)? ]+)";
 
     ^this
@@ -214,52 +198,84 @@
   }
 
   // Repetition parsing shortcuts
-  perc { ^this.repetitionPattern(\perc, 0); }
-  degree { |oct=5| ^this.repetitionPattern(\degree, oct); }
-  freq { |oct=5| ^this.repetitionPattern(\freq, oct); }
-  int { |oct=5| ^this.repetitionPattern(\int, oct); }
-  chord { |oct=5| ^this.repetitionPattern(\chord, oct); }
-  fn{ |fn| ^this.repetitionPattern(\fn, 0, fn); }
+  perc { |amp=0.9| ^this.repetitionPattern(\perc, amp, 0); }
+  degree { |amp=0.7, oct=5| ^this.repetitionPattern(\degree, amp, oct); }
+  chord { |amp=0.7, oct=5| ^this.repetitionPattern(\chord, amp, oct); }
+  freq { |amp=0.7, oct=5| ^this.repetitionPattern(\freq, amp, oct); }
+  int { |amp=0.7, oct=5| ^this.repetitionPattern(\int, amp, oct); }
+  // fn{ |fn| ^this.repetitionPattern(\fn, 0, fn); }
 
   shuffle { ^this.split($ ).scramble.join(" "); }
 }
 
 // + Dictionary {
 + Event {
-
-  with { |... args| ^this.merge(().putPairs(args.flat), {|a,b| b }); }
-/*  sum { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a+b }); }
-  rest { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a-b }); }
-  mul { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a*b }); }
-  div { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a/b }); }*/
-
+  // Where to send the Events.
   // midi
   midichannel { |chan| ^this.with([\type, \md, \chan, chan]); }
-
   // synths
   usingsynth { |synth| ^this.with([\type, \note, \instrument, synth]); }
 
+  // Manipulates individual Events.
+  with { |... args| ^this.merge(().putPairs(args.flat), {|a,b| b }); }
+  plus { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a+b }); }
+  minus { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a-b }); }
+  mul { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a*b }); }
+  div { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a/b }); }
 
   applyAmplitude {
-    |amp|
+    |amp=0.666|
+    var symbol = this.at(\symbol), shift = 0;
 
-    this[\symbol].asString.contains("@").postln;
+    if (symbol.isKindOf(List)) {
+      if (symbol.reject{ |x| x.asString.contains("@").not }.size.asBoolean) { shift = 0.25 }
+    } {
+      if (symbol.asString.contains("@")) { shift = 0.25 }
+    };
 
     ^this
     .with(\amp, amp)
-    // .sum
-
-    // ^this;
-    // ^if (this.contains("@")) { 0.25 } { 0 }
+    .plus(\amp, shift)
+    ;
   }
 
   applyOctave {
-    |octave|
-    ^this;
-    // if (this.contains(",")) { oct = -1 };
-    // if (this.contains("'")) { oct = 1 };
+    |octave=5|
+    var symbol = this.at(\symbol), shift = 0;
 
-    // ^oct;
+    if (symbol.isKindOf(List)) {
+      if (symbol.reject{ |x| x.asString.contains(",").not }.size.asBoolean) { shift = -1 };
+      if (symbol.reject{ |x| x.asString.contains("'").not }.size.asBoolean) { shift = 1 };
+    } {
+      if (symbol.asString.contains(",")) { shift = -1 };
+      if (symbol.asString.contains("'")) { shift = 1 };
+    };
+
+    ^this
+    .with(\octave, octave)
+    .plus(\octave, shift)
+    ;
+  }
+
+  applyMIDINote {
+    |typeOf=nil|
+    var symbol = this.at(\symbol), octave = this.at(\octave), midinote;
+
+    if (typeOf.notNil) {
+      if (symbol.isKindOf(Array)) {
+        midinote = symbol
+        .collect(_.maybeCleanUp).collect(_.asSymbol).collect(_.asMIDINote(typeOf, octave));
+      } {
+        midinote = symbol.maybeCleanUp.asSymbol.asMIDINote(typeOf, octave);
+      }
+      ;
+
+      ^this
+      .merge((midinote: midinote), {|a,b| b })
+      ;
+    } {
+      ^nil;
+    }
   }
 }
 
@@ -391,17 +407,13 @@
 }
 
 + Float {
-
   midirange {
     ^(127 * this).round;
   }
-
 }
 
 + Integer {
-
   rangemidi {
     ^(this/127).asStringPrec(2);
   }
-
 }
