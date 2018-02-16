@@ -275,7 +275,6 @@
   // Synthdefs
   usingSynthdef { |synth| ^this.with(\type, \note, \instrument, synth); }
 
-
   // Manipulates individual Events.
   with { |... args| ^this.merge(().putPairs(args.flat), {|a,b| b }); }
   plus { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a+b }); }
@@ -426,6 +425,23 @@
   regularly { |callback| ^this.probability(0.75, callback); }
 
   shuffle { ^this.scramble; }
+
+  // "Join" the whole SequenceCollection of Events into a single Event
+  singleEvent {
+    var evt = ();
+    this
+    .collect {
+      |e,i|
+      e.keys.collect {
+        |key|
+        if (evt.keys.asList.indexOfEqual(key).isNil)
+        { evt[key] = List.new; };
+        evt[key].add(e.at(key));
+      }
+    }
+    ;
+    ^evt;
+  }
 }
 
 + Float {
