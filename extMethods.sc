@@ -210,23 +210,7 @@
 
 // + Dictionary {
 + Event {
-  // Where to send the Events.
-  // midi
-  midichannel { |chan| ^this.with([\type, \md, \chan, chan]); }
-  // synths
-  usingsynth { |synth| ^this.with([\type, \note, \instrument, synth]); }
-
-  // Manipulates individual Events.
-  with { |... args| ^this.merge(().putPairs(args.flat), {|a,b| b }); }
-  plus { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a+b }); }
-  minus { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a-b }); }
-  mul { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a*b }); }
-  div { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a/b }); }
-  mute { ^this.with([\amp, 0]); }
-  stretch { |n| ^this.with([\stretch, n]); }
-  fast { |n| ^this.stretch(1/n); }
-  slow { |n| ^this.stretch(n); }
-
+  // Parsing / Building Repetition Events.
   applyAmplitude {
     |amp=0.9|
     var symbol = this.at(\symbol), shift = 0;
@@ -242,7 +226,6 @@
     .plus(\amp, shift)
     ;
   }
-
   applyOctave {
     |octave=5|
     var symbol = this.at(\symbol), shift = 0;
@@ -260,7 +243,6 @@
     .plus(\octave, shift)
     ;
   }
-
   applyMIDINote {
     |typeOf=nil|
     var symbol = this.at(\symbol), octave = this.at(\octave), midinote;
@@ -286,6 +268,24 @@
       ^nil;
     }
   }
+
+  // Where to send the Events.
+  // MIDI
+  usingMIDI { |chan| ^this.with(\type, \md, \chan, chan); }
+  // Synthdefs
+  usingSynthdef { |synth| ^this.with(\type, \note, \instrument, synth); }
+
+
+  // Manipulates individual Events.
+  with { |... args| ^this.merge(().putPairs(args.flat), {|a,b| b }); }
+  plus { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a+b }); }
+  minus { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a-b }); }
+  mul { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a*b }); }
+  div { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a/b }); }
+  mute { ^this.with([\amp, 0]); }
+  stretch { |n| ^this.with([\stretch, n]); }
+  fast { |n| ^this.stretch(1/n); }
+  slow { |n| ^this.stretch(n); }
 }
 
 + SequenceableCollection {
@@ -342,7 +342,22 @@
   }
 
   // midi channels
-  ch { |channel=9, rep=inf| ^this.collect(_.midichannel(channel)).pseq(rep); }
+  ch {
+    |channel=9, rep=inf|
+    ^this
+    .collect(_.usingMIDI(channel))
+    .pseq(rep);
+  }
+
+  //using synthdef
+  synth {
+    |synthdef=\default, rep=inf|
+    ^this
+    .collect(_.usingSynthdef(synthdef))
+    .pseq(rep);
+  }
+
+  // lazy shortcuts
   ch1 { |rep=inf| ^this.ch(1, rep); }
   ch2 { |rep=inf| ^this.ch(2, rep); }
   ch3 { |rep=inf| ^this.ch(3, rep); }
@@ -360,8 +375,6 @@
   ch15 { |rep=inf| ^this.ch(15, rep); }
   ch16 { |rep=inf| ^this.ch(16, rep); }
 
-  //using synthdef
-  synth { |synthdef=\default, rep=inf| ^this.collect(_.usingsynth(synthdef)).pseq(rep); }
 
   // functions to apply over a List of Events
   mute { ^this.collect(_.mute); }
