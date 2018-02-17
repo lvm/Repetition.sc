@@ -31,6 +31,7 @@ Repetition {
     srv = Server.default;
     srv.options.numBuffers = 1024 * 64;
     srv.options.memSize = 8192 * 16;
+    // srv.options.memSize = 65536 * 4;
     srv.options.maxNodes = 1024 * 32;
     srv.options.sampleRate = 44100;
     srv.options.numOutputBusChannels = 8;

@@ -26,8 +26,8 @@
     });
   }
 
-  on { |chan  note vel=127| outmidi.noteOn(chan, note: note, veloc:vel); }
-  off { |chan| outmidi.allNotesOff(chan); }
+  noteOn { |chan  note vel=127| outmidi.noteOn(chan, note: note, veloc:vel); }
+  noteOff { |chan| outmidi.allNotesOff(chan); }
 
   /*
   * This method will be deprecated soon, has a couple of interesting functions

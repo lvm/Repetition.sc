@@ -341,7 +341,7 @@
   }
 
   // midi channels
-  ch {
+  midich {
     |channel=9, rep=inf|
     ^this
     .collect(_.usingMIDI(channel))
@@ -349,7 +349,7 @@
   }
 
   //using synthdef
-  synth {
+  synthdef {
     |synthdef=\default, rep=inf|
     ^this
     .collect(_.usingSynthdef(synthdef))
@@ -357,22 +357,22 @@
   }
 
   // lazy shortcuts
-  ch1 { |rep=inf| ^this.ch(1, rep); }
-  ch2 { |rep=inf| ^this.ch(2, rep); }
-  ch3 { |rep=inf| ^this.ch(3, rep); }
-  ch4 { |rep=inf| ^this.ch(4, rep); }
-  ch5 { |rep=inf| ^this.ch(5, rep); }
-  ch6 { |rep=inf| ^this.ch(6, rep); }
-  ch7 { |rep=inf| ^this.ch(7, rep); }
-  ch8 { |rep=inf| ^this.ch(8, rep); }
-  ch9 { |rep=inf| ^this.ch(9, rep); }
-  ch10 { |rep=inf| ^this.ch(10, rep); }
-  ch11 { |rep=inf| ^this.ch(11, rep); }
-  ch12 { |rep=inf| ^this.ch(12, rep); }
-  ch13 { |rep=inf| ^this.ch(13, rep); }
-  ch14 { |rep=inf| ^this.ch(14, rep); }
-  ch15 { |rep=inf| ^this.ch(15, rep); }
-  ch16 { |rep=inf| ^this.ch(16, rep); }
+  ch1 { |rep=inf| ^this.midich(1, rep); }
+  ch2 { |rep=inf| ^this.midich(2, rep); }
+  ch3 { |rep=inf| ^this.midich(3, rep); }
+  ch4 { |rep=inf| ^this.midich(4, rep); }
+  ch5 { |rep=inf| ^this.midich(5, rep); }
+  ch6 { |rep=inf| ^this.midich(6, rep); }
+  ch7 { |rep=inf| ^this.midich(7, rep); }
+  ch8 { |rep=inf| ^this.midich(8, rep); }
+  ch9 { |rep=inf| ^this.midich(9, rep); }
+  ch10 { |rep=inf| ^this.midich(10, rep); }
+  ch11 { |rep=inf| ^this.midich(11, rep); }
+  ch12 { |rep=inf| ^this.midich(12, rep); }
+  ch13 { |rep=inf| ^this.midich(13, rep); }
+  ch14 { |rep=inf| ^this.midich(14, rep); }
+  ch15 { |rep=inf| ^this.midich(15, rep); }
+  ch16 { |rep=inf| ^this.midich(16, rep); }
 
 
   // functions to apply over a List of Events
@@ -391,7 +391,7 @@
     ^this.collect(_.with(args));
   }
 
-  every {
+  everyN {
     |times, callback|
     ^this
     .collect{
