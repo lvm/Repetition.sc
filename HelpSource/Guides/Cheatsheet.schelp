@@ -105,11 +105,13 @@ code::
 
 // Noisy saw.
 ~nsaw = {
-  |room=0.5, ctf=1250|
+  |basenote=36, plusnote=12, ctf=1250, amp=0.25|
   var sig;
-  sig = RLPF.ar(Mix.ar([LFSaw.ar(([36,42,38].choose+Chord(\maj9)).collect(_.midicps), mul:0.05), PinkNoise.ar(0.1)]),ctf, MouseX.kr(0.1,0.9,1))!2 * 1.dbamp;
-  OffsetOut.ar(0, Limiter.ar(sig * amp, 0.9));
-};
+  sig = RLPF.ar(LFTri.ar(Vibrato.kr((basenote+12+plusnote+Chord(\maj)).collect(_.midicps)!2, rate:6), [0, FSinOsc.kr(0.5)], mul:0.05), ctf, FSinOsc.kr(10).clip(0.1,0.125)) * -5.dbamp * FSinOsc.kr(0.2).clip(0.5,0.8);
+  sig = sig + (RLPF.ar(LFSaw.ar(Vibrato.kr((basenote+plusnote+Chord(\maj9)).collect(_.midicps)!2, rate:6, iphase: [0, FSinOsc.kr(0.1)]), [0, FSinOsc.kr(0.5)], mul:0.05), ctf, FSinOsc.kr(10).clip(0.1,0.125)) * -2.dbamp * FSinOsc.kr(0.1));
+  sig = Mix.ar([sig* -5.dbamp, FreeVerb.ar(sig, 0.9, 0.9) * 2.dbamp]);
+  OffsetOut.ar(2, Limiter.ar(sig * amp, 0.9));
+}
 
 // crappy strings
 ~fb = {
