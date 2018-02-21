@@ -15,34 +15,20 @@ Repetition {
 
 
   *new {
-    |default_tempo=1, quant=1| // 60 BPM.
+    |proxyspace|
 
     if(itself.isNil){
       itself = super.new;
-      itself.start(default_tempo, quant);
+      itself.start(proxyspace);
     }
 
     ^itself;
   }
 
   start {
-    |default_tempo, quant|
-
-    srv = Server.default;
-    srv.options.numBuffers = 1024 * 64;
-    srv.options.memSize = 8192 * 16;
-    // srv.options.memSize = 65536 * 4;
-    srv.options.maxNodes = 1024 * 32;
-    srv.options.sampleRate = 44100;
-    srv.options.numOutputBusChannels = 8;
-    srv.options.numInputBusChannels = 16;
-    srv.boot();
-
-    //start proxyspace
-    ps = ProxySpace.push(srv);
-    ps.makeTempoClock;
-    ps.clock.tempo = default_tempo;
-    ps.quant = quant;
+    |proxyspace|
+    ps = proxyspace;
+    srv = proxyspace.server;
 
     // "fake" hackish synthdef
     SynthDef(\r, {}).add;
@@ -50,15 +36,6 @@ Repetition {
 
     if ("StageLimiter".classExists) { StageLimiter.activate; };
     "-> Repetition Loaded".postln;
-  }
-
-  initSuperDirt {
-    var dirt;
-    dirt = SuperDirt(2, srv);
-    dirt.start(57120, (0!8));
-    SuperDirt.default = dirt;
-
-    ^dirt;
   }
 
   initMIDI {

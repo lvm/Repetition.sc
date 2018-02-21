@@ -277,6 +277,7 @@
 
   // Manipulates individual Events.
   with { |... args| ^this.merge(().putPairs(args.flat), {|a,b| b }); }
+  pbind { |... args| ^this.merge(().putPairs(args.flat), {|a,b| b }); }
   plus { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a+b }); }
   minus { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a-b }); }
   mul { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a*b }); }
@@ -383,6 +384,12 @@
   freeze { |idx, times=2|
     var frozen = this.at(idx).dup(times);
     ^this.put(idx, frozen).flat;
+  }
+
+  pbind {
+    |... args|
+    args = args.flat;
+    ^this.collect(_.pbind(args));
   }
 
   with {
