@@ -3,7 +3,7 @@
         Notes, Chords, Progressions and Scale.chordProgression for SuperCollider as part of Repetition.sc
 */
 
-Note {
+ReNote {
   classvar twelve, solfa;
   var <note;
 
@@ -59,12 +59,12 @@ Note {
   }
 
   circleOf5th {
-    ^(this.degree + ((0..11) * 7 % 12)).collect(_.toABC).collect(Note(_));
+    ^(this.degree + ((0..11) * 7 % 12)).collect(_.toABC).collect(ReNote(_));
   }
 
 }
 
-Chord {
+ReChord {
   classvar <chords, <progs;
   var <chord;
 
@@ -146,7 +146,7 @@ Chord {
 }
 
 
-Progression {
+ReProgression {
   classvar <progs;
   var <prog;
 
@@ -195,14 +195,14 @@ Progression {
 
 + Integer {
   toABC {
-    ^Note.theTwelve.findKeyForValue(this.fold(0,11));
+    ^ReNote.theTwelve.findKeyForValue(this.fold(0,11));
   }
 }
 
 
 + String {
   toNote {
-    ^Note(this.toLower.asSymbol);
+    ^ReNote(this.toLower.asSymbol);
   }
 }
 
@@ -230,12 +230,12 @@ Progression {
     if (this.name == "Mixolydian") { chords = mixolydian; };
     if (this.name == "Locrian") { chords = locrian; };
 
-    ^(this.degrees + chords.collect(Chord(_)));
+    ^(this.degrees + chords.collect(ReChord(_)));
   }
 
   chordProgression {
     |prog_name = \eleven|
-    var progression = Progression(prog_name);
+    var progression = ReProgression(prog_name);
     var chords = this.chords;
 
     ^Array.fill(progression.size, { |i| chords[progression[i]] });

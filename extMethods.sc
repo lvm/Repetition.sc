@@ -51,15 +51,15 @@
 
     ^switch(typeOf,
       \perc, { val.asGMPerc },
-      \degree, { Note(val).midi(octave) },
-      \freq, { Note(val).freq(octave) },
+      \degree, { ReNote(val).midi(octave) },
+      \freq, { ReNote(val).freq(octave) },
       \int, { val.asInt },
       /*\fn, { var self = val; if (fn.notNil) { self = fn.value(val, pattern); }; self; },*/
       \chord, {
         var self = val.asString;
-        var ch = Chord.names.reject{ |ch| self.findRegexp(ch.asString++"$").size == 0 }.pop;
+        var ch = ReChord.names.reject{ |ch| self.findRegexp(ch.asString++"$").size == 0 }.pop;
         if ( ch.notNil ) {
-          Note(self.replace(ch.asString, "").asSymbol).midi(octave) + Chord(ch) ;
+          ReNote(self.replace(ch.asString, "").asSymbol).midi(octave) + ReChord(ch) ;
         } {
           \rest;
         }
@@ -277,7 +277,7 @@
 
   // Manipulates individual Events.
   with { |... args| ^this.merge(().putPairs(args.flat), {|a,b| b }); }
-  pbind { |... args| ^this.merge(().putPairs(args.flat), {|a,b| b }); }
+  // pbind { |... args| ^this.merge(().putPairs(args.flat), {|a,b| b }); }
   plus { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a+b }); }
   minus { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a-b }); }
   mul { |... args| ^this.merge(().putPairs(args.flat), {|a,b| a*b }); }
@@ -386,12 +386,6 @@
     ^this.put(idx, frozen).flat;
   }
 
-  pbind {
-    |... args|
-    args = args.flat;
-    ^this.collect(_.pbind(args));
-  }
-
   with {
     |... args|
     args = args.flat;
@@ -430,11 +424,13 @@
   rarely { |callback| ^this.probability(0.25, callback); }
   sometimes { |callback| ^this.probability(0.5, callback); }
   regularly { |callback| ^this.probability(0.75, callback); }
+  always { |callback| ^this.probability(1.0, callback);  }
 
   shuffle { ^this.scramble; }
 
-  // "Join" the whole SequenceCollection of Events into a single Event
-  singleEvent {
+  // "Join" the whole SequenceCollection of Events into a single Event -> Pbind
+  pbind {
+    |... args|
     var evt = ();
     this
     .collect {
@@ -447,7 +443,12 @@
       }
     }
     ;
-    ^evt;
+    evt = evt.collect{
+      |v, k|
+      if (v.asList.flat.uniq.size == 1) { v.pop; } { v.pseq; }
+    }
+    ;
+    ^Pchain(Prepetition(), Pbind(*(evt.getPairs ++ args.flat)));
   }
 }
 
