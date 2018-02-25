@@ -7,14 +7,15 @@ Prepetition {
   *new {
     ^Prout({
       |evt|
-      var idx = 0;
-      var len = evt[\pattern].size;
-
       while { evt.notNil } {
         // "defaults"
-        evt[\stut] = evt[\stut] ?? 1;
-        // where to send the current evt
-        // evt[to] = current + (if (((to.asSymbol == \midinote) || (to.asSymbol == \control)) && (isPerc.asBoolean == false)) { 12*evt[\octave] } { 0 });
+        evt[\stut] = evt.stut ?? 1;
+        evt[\octave] = evt.octave ?? 5;
+
+        // actual note calc.
+        if (evt[\typeof].asSymbol != \perc) {
+          evt[\midinote] = evt.midinote + (12 * evt.octave);
+        };
 
         evt = evt.yield;
       }

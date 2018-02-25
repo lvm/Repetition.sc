@@ -51,15 +51,15 @@
 
     ^switch(typeOf,
       \perc, { val.asGMPerc },
-      \degree, { ReNote(val).midi(octave) },
-      \freq, { ReNote(val).freq(octave) },
+      \degree, { ReNote(val).midi(0) },
+      \freq, { ReNote(val).freq(0) },
       \int, { val.asInt },
       /*\fn, { var self = val; if (fn.notNil) { self = fn.value(val, pattern); }; self; },*/
       \chord, {
         var self = val.asString;
         var ch = ReChord.names.reject{ |ch| self.findRegexp(ch.asString++"$").size == 0 }.pop;
         if ( ch.notNil ) {
-          ReNote(self.replace(ch.asString, "").asSymbol).midi(octave) + ReChord(ch) ;
+          ReNote(self.replace(ch.asString, "").asSymbol).midi(0) + ReChord(ch) ;
         } {
           \rest;
         }
@@ -97,6 +97,7 @@
     .collect(_.applyAmplitude(amp))
     // then we add the octave
     // if the `symbol` has `'`, will shift 1 octave up. if the 'symbol' has `,` will shift 1 octave down.
+    // also we need to inject the typeOf to calculate later the octave we're on.
     .collect(_.applyOctave(oct))
     // now that everything is it's right place, we'll clean the symbols to
     // finally, convert each Event to a proper MIDI note based on `typeOf` and the `symbol`.
@@ -258,10 +259,10 @@
 
       if (typeOf.asSymbol == \freq) {
         ^this
-        .merge((freq: midinote), {|a,b| b })
+        .merge((freq: midinote, typeof: typeOf), {|a,b| b })
       } {
         ^this
-        .merge((midinote: midinote), {|a,b| b })
+        .merge((midinote: midinote, typeof: typeOf), {|a,b| b })
       }
       ;
     } {
