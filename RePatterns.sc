@@ -10,7 +10,8 @@ Prepetition {
       while { evt.notNil } {
         // "defaults"
         evt[\stut] = evt.stut ?? 1;
-        evt[\octave] = evt.octave ?? 5;
+        evt[\shift] = evt.shift ?? 0;
+        evt[\octave] = (evt.octave ?? 5) + evt.shift;
 
         // actual note calc.
         if (evt[\typeof].asSymbol != \perc) {

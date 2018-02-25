@@ -237,11 +237,11 @@
     } {
       if (symbol.asString.contains(",")) { shift = -1 };
       if (symbol.asString.contains("'")) { shift = 1 };
-    };
-
+    }
+    ;
     ^this
     .with(\octave, octave)
-    .plus(\octave, shift)
+    .plus(\shift, shift)
     ;
   }
   applyMIDINote {
