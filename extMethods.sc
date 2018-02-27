@@ -179,13 +179,13 @@
   }
 
   parseRepetition {
-    |typeOf=\perc|
+    |typeOf=\perc, octave=5|
     var pattern = this;
     typeOf = typeOf.asSymbol;
     if (typeOf == \perc ) { pattern = pattern.perc; };
-    if (typeOf == \degree ) { pattern = pattern.perc; };
-    if (typeOf == \chord ) { pattern = pattern.perc; };
-    if (typeOf == \int ) { pattern = pattern.perc; };
+    if (typeOf == \degree ) { pattern = pattern.degree; };
+    if (typeOf == \chord ) { pattern = pattern.chord; };
+    if (typeOf == \int ) { pattern = pattern.int; };
 
     ^pattern.singleEvent.midinote;
   }
@@ -458,7 +458,8 @@
     ;
     ^evt.collect{
       |v, k|
-      if (v.asList.flat.uniq.size == 1) { v.pop; } { v; }
+      v = v.asArray;
+      if (v.flat.uniq.size == 1) { v.pop; } { v; }
     }
     ;
   }
@@ -468,7 +469,8 @@
     var evt = this.singleEvent;
     evt = evt.collect{
       |v, k|
-      if (v.asList.flat.uniq.size == 1) { v.pop; } { v.pseq; }
+      v = v.asArray;
+      if (v.flat.uniq.size == 1) { v.pop; } { v.pseq; }
     }
     ;
     ^Pchain(Prepetition(), Pbind(*(evt.getPairs ++ args.flat)));
