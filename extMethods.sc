@@ -178,6 +178,18 @@
     ;
   }
 
+  parseRepetition {
+    |typeOf=\perc|
+    var pattern = this;
+    typeOf = typeOf.asSymbol;
+    if (typeOf == \perc ) { pattern = pattern.perc; };
+    if (typeOf == \degree ) { pattern = pattern.perc; };
+    if (typeOf == \chord ) { pattern = pattern.perc; };
+    if (typeOf == \int ) { pattern = pattern.perc; };
+
+    ^pattern.singleEvent.midinote;
+  }
+
   /*
   Based on Steven Yi's Hex Beats.
   http://kunstmusik.com/2017/10/20/hex-beats/
@@ -430,7 +442,7 @@
   shuffle { ^this.scramble; }
 
   // "Join" the whole SequenceCollection of Events into a single Event -> Pbind
-  pbind {
+  singleEvent {
     |... args|
     var evt = ();
     this
@@ -444,6 +456,16 @@
       }
     }
     ;
+    ^evt.collect{
+      |v, k|
+      if (v.asList.flat.uniq.size == 1) { v.pop; } { v; }
+    }
+    ;
+  }
+
+  pbind {
+    |... args|
+    var evt = this.singleEvent;
     evt = evt.collect{
       |v, k|
       if (v.asList.flat.uniq.size == 1) { v.pop; } { v.pseq; }
