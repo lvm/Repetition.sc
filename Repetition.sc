@@ -12,6 +12,7 @@ Repetition {
   classvar <srv;
   classvar <ps;
   classvar <outmidi;
+  classvar <samples;
 
 
   *new {
@@ -23,6 +24,10 @@ Repetition {
     }
 
     ^itself;
+  }
+
+  *initClass {
+    samples = (); // Dictionary.new;
   }
 
   start {

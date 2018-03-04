@@ -7,15 +7,21 @@ Prepetition {
   *new {
     ^Prout({
       |evt|
+      var repetition = Repetition.new;
       while { evt.notNil } {
+
         // "defaults"
         evt[\stut] = evt.stut ?? 1;
         evt[\shift] = evt.shift ?? 0;
         evt[\octave] = (evt.octave ?? 5) + evt.shift;
 
-        // actual note calc.
-        if (evt[\typeof].asSymbol != \perc) {
+        // correct midinote with octave and all.
+        if (evt.typeof.asSymbol != \perc and: (evt.typeof.asSymbol != \sample)) {
           evt[\midinote] = evt.midinote + (12 * evt.octave);
+        };
+        // actual note calc.
+        if (evt.typeof.asSymbol == \sample) {
+          evt[\buf] = repetition.getBufnum( ((evt.kit ?? "808")++"_"++evt.midinote).asSymbol );
         };
 
         evt = evt.yield;

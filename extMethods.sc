@@ -51,6 +51,7 @@
 
     ^switch(typeOf,
       \perc, { val.asGMPerc },
+      \sample, { val.asGMPerc },
       \degree, { ReNote(val).midi(0) },
       \freq, { ReNote(val).freq(0) },
       \int, { val.asInt },
@@ -183,6 +184,7 @@
     var pattern = this;
     typeOf = typeOf.asSymbol;
     if (typeOf == \perc ) { pattern = pattern.perc; };
+    if (typeOf == \sample ) { pattern = pattern.perc; };
     if (typeOf == \degree ) { pattern = pattern.degree; };
     if (typeOf == \chord ) { pattern = pattern.chord; };
     if (typeOf == \int ) { pattern = pattern.int; };
@@ -212,6 +214,7 @@
 
   // Repetition parsing shortcuts
   perc { |amp=0.9| ^this.repetitionPattern(\perc, 0, amp); }
+  sample { |amp=0.9| ^this.repetitionPattern(\sample, 0, amp); }
   degree { |oct=5, amp=0.9| ^this.repetitionPattern(\degree, oct, amp); }
   chord { |oct=5, amp=0.9| ^this.repetitionPattern(\chord, oct, amp); }
   freq { |oct=5, amp=0.9| ^this.repetitionPattern(\freq, oct, amp); }
