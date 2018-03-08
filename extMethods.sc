@@ -445,7 +445,7 @@
   shuffle { ^this.scramble; }
 
   // sequences work better with single notes -> `"c".degree`.
-  sequence {
+  arpeggio {
     |sq|
     ^this.collect{
       |evt|
@@ -462,11 +462,11 @@
 
 
   // sequence aliases:
-  dim { ^this.sequence([0,3,0,6]); }
-  tritone { ^this.sequence([0,6,5,-3]); }
-  fifth { ^this.sequence([0,4,0,8]); }
-  oneUp { ^this.sequence([0,12,0]); }
-  oneDown { ^this.sequence([0,-12,0]); }
+  dim { ^this.arpeggio([0,3,0,6]); }
+  tritone { ^this.arpeggio([0,6,5,-3]); }
+  fifth { ^this.arpeggio([0,4,0,8]); }
+  oneUp { ^this.arpeggio([0,12,0]); }
+  oneDown { ^this.arpeggio([0,-12,0]); }
 
 
   // "Join" the whole SequenceCollection of Events into a single Event -> Pbind
