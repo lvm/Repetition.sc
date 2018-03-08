@@ -441,8 +441,33 @@
   sometimes { |callback| ^this.probability(0.5, callback); }
   regularly { |callback| ^this.probability(0.75, callback); }
   always { |callback| ^this.probability(1.0, callback);  }
-
+  // an alias, in order to be "constant". see String.shuffle
   shuffle { ^this.scramble; }
+
+  // sequences work better with single notes -> `"c".degree`.
+  sequence {
+    |sq|
+    ^this.collect{
+      |evt|
+      var seqEvts = evt.dup(sq.size);
+      sq.collect {
+        |s, i|
+        seqEvts[i][\midinote] = seqEvts[i][\midinote] + s;
+        seqEvts[i];
+      };
+    }
+    .flat
+    ;
+  }
+
+
+  // sequence aliases:
+  dim { ^this.sequence([0,3,0,6]); }
+  tritone { ^this.sequence([0,6,5,-3]); }
+  fifth { ^this.sequence([0,4,0,8]); }
+  oneUp { ^this.sequence([0,12,0]); }
+  oneDown { ^this.sequence([0,-12,0]); }
+
 
   // "Join" the whole SequenceCollection of Events into a single Event -> Pbind
   singleEvent {
