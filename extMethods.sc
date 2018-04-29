@@ -51,6 +51,7 @@
 
     ^switch(typeOf,
       \perc, { val.asGMPerc },
+      \sample, { val.asGMPerc },
       \degree, { ReNote(val).midi(0) },
       \freq, { ReNote(val).freq(0) },
       \int, { val.asInt },
@@ -183,6 +184,7 @@
     var pattern = this;
     typeOf = typeOf.asSymbol;
     if (typeOf == \perc ) { pattern = pattern.perc; };
+    if (typeOf == \sample ) { pattern = pattern.perc; };
     if (typeOf == \degree ) { pattern = pattern.degree; };
     if (typeOf == \chord ) { pattern = pattern.chord; };
     if (typeOf == \int ) { pattern = pattern.int; };
@@ -212,6 +214,7 @@
 
   // Repetition parsing shortcuts
   perc { |amp=0.9| ^this.repetitionPattern(\perc, 0, amp); }
+  sample { |amp=0.9| ^this.repetitionPattern(\sample, 0, amp); }
   degree { |oct=5, amp=0.9| ^this.repetitionPattern(\degree, oct, amp); }
   chord { |oct=5, amp=0.9| ^this.repetitionPattern(\chord, oct, amp); }
   freq { |oct=5, amp=0.9| ^this.repetitionPattern(\freq, oct, amp); }
@@ -438,8 +441,33 @@
   sometimes { |callback| ^this.probability(0.5, callback); }
   regularly { |callback| ^this.probability(0.75, callback); }
   always { |callback| ^this.probability(1.0, callback);  }
-
+  // an alias, in order to be "constant". see String.shuffle
   shuffle { ^this.scramble; }
+
+  // sequences work better with single notes -> `"c".degree`.
+  arpeggio {
+    |sq|
+    ^this.collect{
+      |evt|
+      var seqEvts = evt.dup(sq.size);
+      sq.collect {
+        |s, i|
+        seqEvts[i][\midinote] = seqEvts[i][\midinote] + s;
+        seqEvts[i];
+      };
+    }
+    .flat
+    ;
+  }
+
+
+  // sequence aliases:
+  dim { ^this.arpeggio([0,3,0,6]); }
+  tritone { ^this.arpeggio([0,6,5,-3]); }
+  fifth { ^this.arpeggio([0,4,0,8]); }
+  oneUp { ^this.arpeggio([0,12,0]); }
+  oneDown { ^this.arpeggio([0,-12,0]); }
+
 
   // "Join" the whole SequenceCollection of Events into a single Event -> Pbind
   singleEvent {
