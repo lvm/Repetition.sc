@@ -16,9 +16,9 @@ Prepetition {
         evt[\octave] = (evt.octave ?? 5) + evt.shift;
 
         // correct midinote with octave and all.
-        if (evt.typeof.asSymbol != \perc and: (evt.typeof.asSymbol != \sample)) {
-          evt[\midinote] = evt.midinote + (12 * evt.octave);
-        };
+        // if (evt.typeof.asSymbol != \perc and: (evt.typeof.asSymbol != \sample)) {
+        evt[\midinote] = evt.midinote + (12 * evt.shift);
+        // };
         // actual note calc.
         if (evt.typeof.asSymbol == \sample) {
           evt[\buf] = repetition.getBufnum( ((evt.kit ?? "808")++"_"++evt.midinote).asSymbol );

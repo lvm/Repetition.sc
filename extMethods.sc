@@ -94,12 +94,12 @@
   }
 
   parseEvents {
-    |typeOf=nil, oct=5, amp=0.9|
+    |oct=5, amp=0.9|
 
     var acc, size, dur, time, octave;
     var pattern = this.asString;
     var events = [];
-    typeOf = typeOf.asSymbol;
+    // typeOf = typeOf.asSymbol;
     amp = amp.asFloat;
     oct = oct.asInt;
 
@@ -186,7 +186,6 @@
   }
 
   repetitionPattern {
-    // |typeOf=nil, oct=5, amp=0.9|
     |oct=5, amp=0.9|
     var regexp = "([\\w\\.\\|\\/\\'\\,!?@?\\+?(\\*\d+)? ]+)";
 
@@ -201,18 +200,9 @@
     .collect(_.asSymbol)
     .collect(_.maybeRepeat)
     .collect(_.maybeSplit)
-    // .collect(_.parseEvents(typeOf, oct, amp))
     .collect(_.parseEvents(oct, amp))
     .pop
     ;
-  }
-
-  pbind {
-    |... args|
-    var self = this;
-    self = self.repetitionPattern;
-
-    ^self.pbind(args);
   }
 
   /*
@@ -274,32 +264,19 @@
     ;
   }
   applyMIDINote {
-    |typeOf=nil|
     var symbol = this.at(\symbol), octave = this.at(\octave), midinote;
 
     // if (typeOf.notNil) {
     if (symbol.isKindOf(Array)) {
-      midinote = symbol
-      // .collect(_.maybeCleanUp).collect(_.asSymbol).collect(_.asMIDINote(typeOf, octave));
-      .collect(_.maybeCleanUp).collect(_.asSymbol).collect(_.asMIDINote);
+      midinote = symbol.collect(_.maybeCleanUp).collect(_.asSymbol).collect(_.asMIDINote);
     } {
-      // midinote = symbol.maybeCleanUp.asSymbol.asMIDINote(typeOf, octave);
       midinote = symbol.maybeCleanUp.asSymbol.asMIDINote;
     }
     ;
-    /*      if (typeOf.asSymbol == \freq) {
-        ^this
-        .merge((freq: midinote, typeof: typeOf), {|a,b| b })
-      } {
-        ^this
-        .merge((midinote: midinote, typeof: typeOf), {|a,b| b })
-      }*/
+
     ^this
-    .merge((midinote: midinote, typeof: typeOf), {|a,b| b })
+    .merge((midinote: midinote), {|a,b| b })
     ;
-  // } {
-    // ^nil;
-  // }
   }
 
   // Where to send the Events.
