@@ -45,7 +45,7 @@
     ^item;
   }
 
-  asMIDINote {
+  asMIDINoteOLD {
     |typeOf, octave=5|
     var val = this;
 
@@ -66,6 +66,31 @@
         }
       }
     );
+  }
+
+  asMIDINote {
+    var symbol = this;
+    var midinote = \rest;
+
+    if (symbol.percussion.notNil,
+      {
+        midinote = symbol.percussion;
+      },
+      {
+        if (symbol.chord.notNil,
+          {
+            midinote = symbol.chord;
+          },
+          {
+            if (symbol.midi.notNil) {
+              midinote = symbol.midi;
+            }
+          }
+        );
+      }
+    );
+
+    ^midinote;
   }
 
   parseEvents {
@@ -102,7 +127,8 @@
     .collect(_.applyOctave(oct))
     // now that everything is it's right place, we'll clean the symbols to
     // finally, convert each Event to a proper MIDI note based on `typeOf` and the `symbol`.
-    .collect(_.applyMIDINote(typeOf))
+    // .collect(_.applyMIDINote(typeOf))
+    .collect(_.applyMIDINote)
     // and to be sure, we'll remove everything that's not an Event.
     .reject(_.isKindOf(Event).not)
     ;
@@ -160,7 +186,8 @@
   }
 
   repetitionPattern {
-    |typeOf=nil, oct=5, amp=0.9|
+    // |typeOf=nil, oct=5, amp=0.9|
+    |oct=5, amp=0.9|
     var regexp = "([\\w\\.\\|\\/\\'\\,!?@?\\+?(\\*\d+)? ]+)";
 
     ^this
@@ -174,22 +201,18 @@
     .collect(_.asSymbol)
     .collect(_.maybeRepeat)
     .collect(_.maybeSplit)
-    .collect(_.parseEvents(typeOf, oct, amp))
+    // .collect(_.parseEvents(typeOf, oct, amp))
+    .collect(_.parseEvents(oct, amp))
     .pop
     ;
   }
 
-  parseRepetition {
-    |typeOf=\perc, octave=5|
-    var pattern = this;
-    typeOf = typeOf.asSymbol;
-    if (typeOf == \perc ) { pattern = pattern.perc; };
-    if (typeOf == \sample ) { pattern = pattern.perc; };
-    if (typeOf == \degree ) { pattern = pattern.degree; };
-    if (typeOf == \chord ) { pattern = pattern.chord; };
-    if (typeOf == \int ) { pattern = pattern.int; };
+  pbind {
+    |... args|
+    var self = this;
+    self = self.repetitionPattern;
 
-    ^pattern.singleEvent.midinote;
+    ^self.pbind(args);
   }
 
   /*
@@ -211,15 +234,6 @@
       };
     }.flat;
   }
-
-  // Repetition parsing shortcuts
-  perc { |amp=0.9| ^this.repetitionPattern(\perc, 0, amp); }
-  sample { |amp=0.9| ^this.repetitionPattern(\sample, 0, amp); }
-  degree { |oct=5, amp=0.9| ^this.repetitionPattern(\degree, oct, amp); }
-  chord { |oct=5, amp=0.9| ^this.repetitionPattern(\chord, oct, amp); }
-  freq { |oct=5, amp=0.9| ^this.repetitionPattern(\freq, oct, amp); }
-  int { |oct=5, amp=0.9| ^this.repetitionPattern(\int, oct, amp); }
-  // fn{ |fn| ^this.repetitionPattern(\fn, 0, fn); }
 
   shuffle { ^this.split($ ).scramble.join(" "); }
 }
@@ -263,26 +277,29 @@
     |typeOf=nil|
     var symbol = this.at(\symbol), octave = this.at(\octave), midinote;
 
-    if (typeOf.notNil) {
-      if (symbol.isKindOf(Array)) {
-        midinote = symbol
-        .collect(_.maybeCleanUp).collect(_.asSymbol).collect(_.asMIDINote(typeOf, octave));
-      } {
-        midinote = symbol.maybeCleanUp.asSymbol.asMIDINote(typeOf, octave);
-      }
-      ;
-
-      if (typeOf.asSymbol == \freq) {
+    // if (typeOf.notNil) {
+    if (symbol.isKindOf(Array)) {
+      midinote = symbol
+      // .collect(_.maybeCleanUp).collect(_.asSymbol).collect(_.asMIDINote(typeOf, octave));
+      .collect(_.maybeCleanUp).collect(_.asSymbol).collect(_.asMIDINote);
+    } {
+      // midinote = symbol.maybeCleanUp.asSymbol.asMIDINote(typeOf, octave);
+      midinote = symbol.maybeCleanUp.asSymbol.asMIDINote;
+    }
+    ;
+    /*      if (typeOf.asSymbol == \freq) {
         ^this
         .merge((freq: midinote, typeof: typeOf), {|a,b| b })
       } {
         ^this
         .merge((midinote: midinote, typeof: typeOf), {|a,b| b })
-      }
-      ;
-    } {
-      ^nil;
-    }
+      }*/
+    ^this
+    .merge((midinote: midinote, typeof: typeOf), {|a,b| b })
+    ;
+  // } {
+    // ^nil;
+  // }
   }
 
   // Where to send the Events.

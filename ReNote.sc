@@ -206,6 +206,7 @@ ReProgression {
   }
 }
 
+// SuperHelpers for ABC / Percussion notation parsing.
 
 + Scale {
   chords {
@@ -240,4 +241,197 @@ ReProgression {
 
     ^Array.fill(progression.size, { |i| chords[progression[i]] });
   }
+}
+
++ SimpleNumber {
+
+  abc {
+    var note, semitone, octave, chromatic;
+    chromatic = (\c: 0, \cs: 1, \d: 2, \ds:3, \e: 4, \f:5, \fs:6, \g:7, \gs:8, \a:9, \as:10, \b:11);
+    note = (this + 0.5).asInt;
+    semitone = note % 12;
+    octave = (note / 12).asInteger;
+
+    ^"%%".format(chromatic.findKeyForValue(semitone), octave);
+  }
+
+  percussion {
+    var perc = (
+      \bd: 36, // Bass Drum
+      \sd: 38, // Snare Drum
+      \lt: 45, // Low Tom
+      \lc: 64, // Low Conga
+      \mt: 48, // (high) Mid Tom
+      \mc: 63, // Mid Conga
+      \ht: 50, // High Tom
+      \hc: 62, // High Conga
+      \cl: 75, // CLaves
+      \rs: 37, // RimShot
+      \ma: 70, // MAracas
+      \cp: 39, // hand ClaP
+      \cb: 56, // CowBell
+      \cy: 52, // CYmbal
+      \oh: 46, // Open Hi-hat
+      \ch: 42, // Closed Hi-hat
+    );
+
+    ^perc.findKeyForValue(this);
+  }
+
+}
+
++ String {
+
+  midi {
+    var whites = (\c: 0, \d: 2, \e: 4, \f:5, \g:7, \a:9, \b:11);
+    var octave = 5;
+    var note = this.toLower;
+    var tone = whites.at(note.at(0).asSymbol);
+
+    if ("[a-g]".matchRegexp(note.at(0).asString).not) {
+      ^nil;
+    };
+
+    if ("[0-9]".matchRegexp(note.reverse.at(0).asString)) {
+      octave = note.reverse.at(0);
+      note = note.replace(octave, "");
+    };
+    if (octave.isInteger.not) { octave = octave.digit; };
+
+    if (".(b|s)".matchRegexp(note)) {
+      if ("s$".matchRegexp(note)) {
+        tone = tone + 1;
+      };
+      if ("b$".matchRegexp(note)) {
+        tone = tone - 1;
+      }
+    };
+
+    ^(tone + (12 * octave));
+  }
+
+  percussion {
+    var perc = (
+      \bd: 36, // Bass Drum
+      \sd: 38, // Snare Drum
+      \lt: 45, // Low Tom
+      \lc: 64, // Low Conga
+      \mt: 48, // (high) Mid Tom
+      \mc: 63, // Mid Conga
+      \ht: 50, // High Tom
+      \hc: 62, // High Conga
+      \cl: 75, // CLaves
+      \rs: 37, // RimShot
+      \ma: 70, // MAracas
+      \cp: 39, // hand ClaP
+      \cb: 56, // CowBell
+      \cy: 52, // CYmbal
+      \oh: 46, // Open Hi-hat
+      \ch: 42, // Closed Hi-hat
+    );
+
+    ^perc.at(this.asSymbol);
+  }
+
+  chord {
+    var chords = (
+      \one: [0],
+      \maj: [0, 4, 7],
+      \min: [0, 3, 7],
+      \dim: [0, 3, 6],
+      \aug: [0, 4, 8],
+      \dim7: [0, 3, 6, 9],
+      \five: [0, 7],
+      \dom7: [0, 4, 7, 10],
+      \maj7: [0, 4, 7, 11],
+      \m7: [0, 3, 7, 10],
+      \mMaj7: [0, 3, 7, 11],
+      \sus4: [0, 5, 7],
+      \sus2: [0, 2, 7],
+      \six: [0, 4, 7, 9],
+      \m6: [0, 3, 7, 9],
+      \nine: [0, 4, 7, 10, 14],
+      \m9: [0, 3, 7, 10, 14],
+      \maj9: [0, 4, 7, 11, 14],
+      \mMaj9: [0, 3, 7, 11, 14],
+      \eleven: [0, 4, 7, 10, 14, 17],
+      \m11: [0, 3, 7, 10, 14, 17],
+      \maj11: [0, 4, 7, 11, 14, 17],
+      \mMaj11: [0, 3, 7, 11, 14, 17],
+      \thirteen: [0, 4, 7, 10, 14, 21],
+      \m13: [0, 3, 7, 10, 14, 21],
+      \maj13: [0, 4, 7, 11, 14, 21],
+      \mMaj13: [0, 3, 7, 11, 14, 21],
+      \add9: [0, 4, 7, 14],
+      \madd9: [0, 3, 7, 14],
+      \sixadd9: [0, 4, 7, 9, 14],
+      \m6add9: [0, 3, 7, 9, 14],
+      \add11: [0, 4, 7, 10, 17],
+      \majAdd11: [0, 4, 7, 11, 17],
+      \mAdd11: [0, 3, 7, 10, 17],
+      \mMajAdd11: [0, 3, 7, 11, 17],
+      \add13: [0, 4, 7, 10, 21],
+      \majAdd13: [0, 4, 7, 11, 21],
+      \mAdd13: [0, 3, 7, 10, 21],
+      \mMajAdd13: [0, 3, 7, 11, 21],
+      \sevenFlat5: [0, 4, 6, 10],
+      \sevenSharp5: [0, 4, 8, 10],
+      \sevenFlat9: [0, 4, 7, 10, 13],
+      \sevenSharp9: [0, 4, 7, 10, 15],
+      \sevenSharp5Flat9: [0, 4, 8, 10, 13],
+      \m7Flat5: [0, 3, 6, 10],
+      \m7dim: [0, 3, 6, 9],
+      \m7Sharp5: [0, 3, 8, 10],
+      \m7Flat9: [0, 3, 7, 10, 13],
+      \nineSharp11: [0, 4, 7, 10, 14, 18],
+      \nineFlat13: [0, 4, 7, 10, 14, 20],
+      \sixSus4: [0, 5, 7, 9],
+      \sevenSus4: [0, 5, 7, 10],
+      \maj7Sus4: [0, 5, 7, 11],
+      \nineSus4: [0, 5, 7, 10, 14],
+      \maj9Sus4: [0, 5, 7, 11, 14]
+    );
+    var regexp = "(%)".format(chords.keys().asArray.collect(_.asString).collect(_.toLower).join("|"));
+    var chord = this.toLower, ch, note, notes;
+    if (regexp.matchRegexp(chord)) {
+      ch = chords.keys.reject{ |ch| chord.findRegexp(ch.asString++"$").size == 0 }.pop;
+      note = chord.replace(ch.asString, "");
+      notes = (note.midi + chords.at(ch));
+    };
+
+    ^notes;
+  }
+
+}
+
++ Symbol {
+
+  midi {
+    ^this.asString.midi;
+  }
+
+  percussion {
+    ^this.asString.percussion;
+  }
+
+  chord {
+    ^this.asString.chord;
+  }
+
+}
+
++ SequenceableCollection {
+
+  abc {
+    ^this.collect(_.abc);
+  }
+
+  percussion {
+    ^this.collect(_.percussion);
+  }
+
+  midi {
+    ^this.collect(_.percussion);
+  }
+
 }
