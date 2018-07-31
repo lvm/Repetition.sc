@@ -46,7 +46,7 @@
   }
 
   whichTypeOf {
-    var symbol = this, midinote = \rest, typeof = \midi;
+    var symbol = this, midinote = \rest, typeof = \percussion; // fix me.
 
     if (symbol.percussion.notNil,
       {
@@ -410,6 +410,7 @@
 
   // functions to apply over a List of Events
   mute { ^this.collect(_.mute); }
+  octave { |o| ^this.collect(_.plus(\midinote, 12 * o)) }
   stretch { |n| ^this.collect(_.stretch(n)); }
   fast { |n| ^this.stretch(1/n); }
   slow { |n| ^this.stretch(n); }
