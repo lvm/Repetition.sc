@@ -14,15 +14,7 @@ Prepetition {
         evt[\stut] = evt.stut ?? 1;
         evt[\shift] = evt.shift ?? 0;
         evt[\octave] = (evt.octave ?? 5) + evt.shift;
-
-        // correct midinote with octave and all.
-        // if (evt.typeof.asSymbol != \perc and: (evt.typeof.asSymbol != \sample)) {
-        evt[\midinote] = evt.midinote + (12 * evt.shift);
-        // };
-        // actual note calc.
-        if (evt.typeof.asSymbol == \sample) {
-          evt[\buf] = repetition.getBufnum( ((evt.kit ?? "808")++"_"++evt.midinote).asSymbol );
-        };
+        evt[\midinote] = evt.midinote + (if (evt.typeof != \percussion, { 12 * evt.octave }, { 0 }));
 
         evt = evt.yield;
       }

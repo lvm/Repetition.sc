@@ -45,45 +45,50 @@
     ^item;
   }
 
-  asMIDINoteOLD {
-    |typeOf, octave=5|
-    var val = this;
-
-    ^switch(typeOf,
-      \perc, { val.asGMPerc },
-      \sample, { val.asGMPerc },
-      \degree, { ReNote(val).midi(0) },
-      \freq, { ReNote(val).freq(0) },
-      \int, { val.asInt },
-      /*\fn, { var self = val; if (fn.notNil) { self = fn.value(val, pattern); }; self; },*/
-      \chord, {
-        var self = val.asString;
-        var ch = ReChord.names.reject{ |ch| self.findRegexp(ch.asString++"$").size == 0 }.pop;
-        if ( ch.notNil ) {
-          ReNote(self.replace(ch.asString, "").asSymbol).midi(0) + ReChord(ch) ;
-        } {
-          \rest;
-        }
-      }
-    );
-  }
-
-  asMIDINote {
-    var symbol = this;
-    var midinote = \rest;
+  whichTypeOf {
+    var symbol = this, midinote = \rest, typeof = \midi;
 
     if (symbol.percussion.notNil,
       {
-        midinote = symbol.percussion;
+        typeof = \percussion;
       },
       {
         if (symbol.chord.notNil,
           {
-            midinote = symbol.chord;
+            typeof = \chord;
           },
           {
             if (symbol.midi.notNil) {
-              midinote = symbol.midi;
+              typeof = \note;
+            }
+          }
+        );
+      }
+    );
+
+    ^typeof;
+  }
+
+  asReNote {
+    |octave=5|
+    var symbol = this, midinote = \rest, typeof = \midi;
+    octave = 0;
+
+    if (symbol.percussion.notNil,
+      {
+        midinote = symbol.percussion;
+        typeof = \percussion;
+      },
+      {
+        if (symbol.chord.notNil,
+          {
+            midinote = symbol.chord(octave);
+            typeof = \chord;
+          },
+          {
+            if (symbol.midi.notNil) {
+              midinote = symbol.midi(octave);
+              typeof = \midi;
             }
           }
         );
@@ -120,15 +125,18 @@
     // since we don't need to calculate the individual duration anymore, the `LoE` needs to be flattened to be able to apply functions over each Event.
     .flat
     // then we add the amplitude. if the `symbol` has `@`,  will sum `0.25`
-    .collect(_.applyAmplitude(amp))
+    .collect(_.applyAccent(amp))
     // then we add the octave
     // if the `symbol` has `'`, will shift 1 octave up. if the 'symbol' has `,` will shift 1 octave down.
     // also we need to inject the typeOf to calculate later the octave we're on.
     .collect(_.applyOctave(oct))
+    // for convenience, let's add the "type of" Event we'll play
+    // ie: percussion, chord, note
+    .collect(_.applyTypeOf)
     // now that everything is it's right place, we'll clean the symbols to
     // finally, convert each Event to a proper MIDI note based on `typeOf` and the `symbol`.
     // .collect(_.applyMIDINote(typeOf))
-    .collect(_.applyMIDINote)
+    .collect(_.applyReNote)
     // and to be sure, we'll remove everything that's not an Event.
     .reject(_.isKindOf(Event).not)
     ;
@@ -231,26 +239,26 @@
 // + Dictionary {
 + Event {
   // Parsing / Building Repetition Events.
-  applyAmplitude {
+  applyAccent {
     |amp=0.9|
-    var symbol = this.at(\symbol), shift = 0;
+    var symbol = this.at(\symbol), accent = 0;
 
-    if (symbol.isKindOf(List)) {
-      if (symbol.reject{ |x| x.asString.contains("@").not }.size.asBoolean) { shift = amp/4 }
+    if (symbol.isKindOf(List) || symbol.isKindOf(Array)) {
+      if (symbol.reject{ |x| x.asString.contains("@").not }.size.asBoolean) { accent = amp/4 }
     } {
-      if (symbol.asString.contains("@")) { shift = amp/4 }
+      if (symbol.asString.contains("@")) { accent = amp/4 }
     };
 
     ^this
     .with(\amp, amp)
-    .plus(\amp, shift)
+    .plus(\amp, accent)
     ;
   }
   applyOctave {
     |octave=5|
     var symbol = this.at(\symbol), shift = 0;
 
-    if (symbol.isKindOf(List)) {
+    if (symbol.isKindOf(List) || symbol.isKindOf(Array)) {
       if (symbol.reject{ |x| x.asString.contains(",").not }.size.asBoolean) { shift = -1 };
       if (symbol.reject{ |x| x.asString.contains("'").not }.size.asBoolean) { shift = 1 };
     } {
@@ -258,19 +266,33 @@
       if (symbol.asString.contains("'")) { shift = 1 };
     }
     ;
+
     ^this
     .with(\octave, octave)
     .plus(\shift, shift)
     ;
   }
-  applyMIDINote {
-    var symbol = this.at(\symbol), octave = this.at(\octave), midinote;
+  applyTypeOf {
+    var symbol = this.at(\symbol), typeof;
 
-    // if (typeOf.notNil) {
     if (symbol.isKindOf(Array)) {
-      midinote = symbol.collect(_.maybeCleanUp).collect(_.asSymbol).collect(_.asMIDINote);
+      typeof = symbol.collect(_.maybeCleanUp).collect(_.asSymbol).collect(_.whichTypeOf);
     } {
-      midinote = symbol.maybeCleanUp.asSymbol.asMIDINote;
+      typeof = symbol.maybeCleanUp.asSymbol.whichTypeOf;
+    }
+    ;
+
+    ^this
+    .merge((typeof: typeof), {|a,b| b })
+    ;
+  }
+  applyReNote {
+    var symbol = this.at(\symbol), shift = this.at(\shift), octave = this.at(\octave) + shift, midinote;
+
+    if (symbol.isKindOf(Array)) {
+      midinote = symbol.collect(_.maybeCleanUp).collect(_.asSymbol).collect(_.asReNote(octave));
+    } {
+      midinote = symbol.maybeCleanUp.asSymbol.asReNote(octave);
     }
     ;
 

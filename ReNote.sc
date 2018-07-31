@@ -167,6 +167,7 @@ ReProgression {
       \rockplus: [0,3,0,4],
       \rebel: [3,4,3],
       \nrg: [0,2,3,5],
+      \fifties: [0,5,3,4],
       \creepy: [0,5,3,4],
       \creepyb: [0,5,1,4],
       \rock: [0,3,4],
@@ -283,8 +284,8 @@ ReProgression {
 + String {
 
   midi {
+    |octave=5|
     var whites = (\c: 0, \d: 2, \e: 4, \f:5, \g:7, \a:9, \b:11);
-    var octave = 5;
     var note = this.toLower;
     var tone = whites.at(note.at(0).asSymbol);
 
@@ -334,6 +335,7 @@ ReProgression {
   }
 
   chord {
+    |octave=5|
     var chords = (
       \one: [0],
       \maj: [0, 4, 7],
@@ -396,7 +398,7 @@ ReProgression {
     if (regexp.matchRegexp(chord)) {
       ch = chords.keys.reject{ |ch| chord.findRegexp(ch.asString++"$").size == 0 }.pop;
       note = chord.replace(ch.asString, "");
-      notes = (note.midi + chords.at(ch));
+      notes = (note.midi(octave) + chords.at(ch));
     };
 
     ^notes;
@@ -407,7 +409,8 @@ ReProgression {
 + Symbol {
 
   midi {
-    ^this.asString.midi;
+    |octave=5|
+    ^this.asString.midi(octave);
   }
 
   percussion {
@@ -415,7 +418,8 @@ ReProgression {
   }
 
   chord {
-    ^this.asString.chord;
+    |octave=5|
+    ^this.asString.chord(octave);
   }
 
 }
