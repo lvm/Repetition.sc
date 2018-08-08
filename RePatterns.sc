@@ -7,14 +7,16 @@ Prepetition {
   *new {
     ^Prout({
       |evt|
-      var repetition = Repetition.new;
       while { evt.notNil } {
+        var revtStream = evt.rpEvent,
+        revt = revtStream.nextRP(),
+        octave = revt.octave ?? evt.octave
+        ;
 
         // "defaults"
         evt[\stut] = evt.stut ?? 1;
-        evt[\shift] = evt.shift ?? 0;
-        evt[\octave] = (evt.octave ?? 5) + evt.shift;
-        evt[\midinote] = evt.midinote + (if (evt.typeof != \percussion, { 12 * evt.octave }, { 0 }));
+        evt[\octave] = (octave ?? 5) + revt.shift;
+        evt[\midinote] = revt.midinote + (if (revt.typeof != \percussion, { 12 * evt.octave }, { 0 }));
 
         evt = evt.yield;
       }
