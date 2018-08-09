@@ -27,17 +27,17 @@
 
   rePlayer {
     |... args|
-    ^Pchain(Prepetition(), Pbind(*args), Pevent((\rpEvent: this)));
+    ^Pchain(Prepetition(), Pbind(*args), RePevent(this));
   }
 
 }
 
 + Object {
 
-  nextRPN {
+  nextNRP {
     |n, inval|
-		^Array.fill(n, { this.nextRP(inval) });
-	}
+    ^Array.fill(n, { this.nextRP(inval) });
+  }
 
 }
 
@@ -144,6 +144,44 @@
   }
 
   shuffle { ^this.split($ ).scramble.join(" "); }
+
+  everyN {
+    |times, callback|
+    ^this
+    .replace("/","").split($ ) // individual notes
+    .reject { |x| x.size == 0 } // reject anything that's not a note
+    .collect{
+      |item, idx|
+      if (idx % times == 0) {
+        callback.(item);
+      } {
+        item
+      }
+    }
+    .join(" ")
+    ;
+  }
+  probability {
+    |chance, callback|
+    ^this
+    .replace("/","").split($ ) // individual notes
+    .reject { |x| x.size == 0 } // reject anything that's not a note
+    .collect{
+      |item, idx|
+      if (chance.coin) {
+        callback.(item);
+      } {
+        item
+      }
+    }
+    .join(" ")
+    ;
+  }
+  rarely { |callback| ^this.probability(0.25, callback); }
+  sometimes { |callback| ^this.probability(0.5, callback); }
+  regularly { |callback| ^this.probability(0.75, callback); }
+  always { |callback| ^this.probability(1.0, callback);  }
+
 }
 
 
@@ -258,18 +296,17 @@
 + Event {
 
   applyAccent {
-    |amp=0.9|
+    |gain=0.9|
     var symbol = this.at(\symbol), accent = 0;
 
     if (symbol.isKindOf(List) || symbol.isKindOf(Array)) {
-      if (symbol.reject{ |x| x.asString.contains("@").not }.size.asBoolean) { accent = amp/4 }
+      if (symbol.reject{ |x| x.asString.contains("@").not }.size.asBoolean) { accent = 0.25 }
     } {
-      if (symbol.asString.contains("@")) { accent = amp/4 }
+      if (symbol.asString.contains("@")) { accent = 0.25 }
     };
 
     ^this
-    .merge((amp: amp), {|a,b| b })
-    .merge((amp: accent), {|a,b| a+b })
+    .merge((accent: accent), {|a,b| b })
     ;
   }
 
