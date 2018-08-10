@@ -3,6 +3,69 @@
         Pattern classes for Repetition.sc
 */
 
+/*Pkey : Pattern {
+	var	<>key, <>repeats;
+
+	*new { |key, repeats|
+		^super.newCopyArgs(key, repeats)
+	}
+
+	storeArgs { ^[key, repeats] }
+
+	asStream {
+		var	keystream = key.asStream;
+		// avoid creating a routine
+		var stream = FuncStream({ |inevent| inevent !? { inevent[keystream.next(inevent)] } });
+		^if(repeats.isNil) { stream } { stream.fin(repeats) }
+	}
+
+	embedInStream { |inval|
+		var outval, keystream = key.asStream;
+		repeats.value(inval).do {
+			outval = inval[keystream.next(inval)];
+			if(outval.isNil) { ^inval };
+			inval = outval.yield;
+		};
+		^inval
+	}
+}*/
+
+Pvol : ListPattern {
+	var <>offset;
+	*new { arg dict;
+		^super.new(dict)
+	}
+
+  // asStream {
+  //   var	keystream = key.asStream;
+  //   // avoid creating a routine
+  //   var stream = FuncStream({ |inevent| inevent !? { inevent[keystream.next(inevent)] } });
+  //   ^if(repeats.isNil) { stream } { stream.fin(repeats) }
+  // }
+
+	embedInStream {  arg inval;
+		var item, offsetValue;
+		offsetValue = offset.value(inval);
+		if (inval.eventAt('reverse') == true, {
+			repeats.value(inval).do({ arg j;
+				list.size.reverseDo({ arg i;
+					item = list.wrapAt(i + offsetValue);
+					inval = item.embedInStream(inval);
+				});
+			});
+		},{
+			repeats.value(inval).do({ arg j;
+				list.size.do({ arg i;
+					item = list.wrapAt(i + offsetValue);
+					inval = item.embedInStream(inval);
+				});
+			});
+		});
+		^inval;
+	}
+	storeArgs { ^[ list, repeats, offset ] }
+}
+
 RePevent : Pattern {
 	var <>pattern, <>event;
 
@@ -21,7 +84,7 @@ RePevent : Pattern {
 	}
 }
 
-PRepetition {
+Prepetition {
   *new {
     ^Prout({
       |evt|

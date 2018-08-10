@@ -25,7 +25,7 @@
     ^value;
   }
 
-  rePlayer {
+  player {
     |... args|
     ^Pchain(Prepetition(), Pbind(*args), RePevent(this));
   }
@@ -182,6 +182,24 @@
   regularly { |callback| ^this.probability(0.75, callback); }
   always { |callback| ^this.probability(1.0, callback);  }
 
+	<< {
+    |notes|
+    var stream = Pseq(notes.split($ ), inf).asStream;
+
+    ^this
+    .split($ )
+    .collect { |p| if (p.asInt.asBoolean) { stream.next.asString } { "r" } }
+    .join(" ")
+    ;
+  }
+  invert {
+    ^this
+    .replace("1", "x")
+    .replace("0", "1")
+    .replace("x", "0")
+    ;
+  }
+
 }
 
 
@@ -239,8 +257,12 @@
             if (symbol.chord.notNil,
               { typeof = \chord; },
               {
-                if (symbol.midi.notNil)
-                { typeof = \note; }
+                if (symbol.midi.notNil,
+                { typeof = \note; },
+                {
+                  if (symbol.asGMPerc.notNil)
+                    { typeof = \percussion; }
+                });
             });
         });
       });
@@ -257,10 +279,14 @@
         if (symbol.chord.notNil,
           { midinote = symbol.chord(0); },
           {
-            if (symbol.midi.notNil)
-            { midinote = symbol.midi(0); }
-          });
-      });
+            if (symbol.midi.notNil,
+              { midinote = symbol.midi(0); },
+              {
+                if(symbol.asGMPerc.notNil)
+                { midinote = symbol.asGMPerc; }
+            });
+        });
+    });
 
     ^midinote;
   }
