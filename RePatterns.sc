@@ -30,6 +30,33 @@ PifRest : Pattern {
     })
   }
 }
+PifEqual : Pattern {
+  var	<>key, <>condition, <>iftrue, <>iffalse, <>default;
+  *new { |key, condition, iftrue, iffalse, default|
+    ^super.newCopyArgs(key, condition, iftrue, iffalse, default)
+  }
+  storeArgs { ^[key, iftrue, iffalse,default] }
+  asStream {
+    var	trueStream = iftrue.asStream,
+    falseStream = iffalse.asStream;
+
+    ^FuncStream({ |inval|
+      var test;
+      if((test = (inval.at(key) == \rest).next(inval)).isNil) {
+        nil
+      } {
+        if(test) {
+          trueStream.next(inval) ? default
+        } {
+          falseStream.next(inval) ? default
+        };
+      };
+    }, {
+      trueStream.reset;
+      falseStream.reset;
+    })
+  }
+}
 
 Peach : Pattern {
   var <>key, <>dict, <>default;
