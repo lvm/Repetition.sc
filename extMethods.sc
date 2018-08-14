@@ -187,6 +187,7 @@
     var stream = Pseq(notes.split($ ), inf).asStream;
 
     ^this
+    .replace("/ ", "")
     .split($ )
     .collect { |p| if (p.asInt.asBoolean) { stream.next.asString } { "r" } }
     .join(" ")
@@ -194,10 +195,18 @@
   }
   invert {
     ^this
+    .replace("/ ", "")
     .replace("1", "x")
     .replace("0", "1")
     .replace("x", "0")
     ;
+  }
+
+  <@> {
+    |... args|
+    ^this
+    .asRepetitionStream
+    .player(*args.at(0));
   }
 
 }

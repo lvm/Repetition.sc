@@ -3,67 +3,51 @@
         Pattern classes for Repetition.sc
 */
 
-/*Pkey : Pattern {
-	var	<>key, <>repeats;
+PifRest : Pattern {
+  var	<>key, <>iftrue, <>iffalse, <>default;
+  *new { |condition, iftrue, iffalse, default|
+    ^super.newCopyArgs(condition, iftrue, iffalse, default)
+  }
+  storeArgs { ^[key, iftrue, iffalse,default] }
+  asStream {
+    var	trueStream = iftrue.asStream,
+    falseStream = iffalse.asStream;
 
-	*new { |key, repeats|
-		^super.newCopyArgs(key, repeats)
-	}
+    ^FuncStream({ |inval|
+      var test;
+      if((test = (inval.at(key) == \rest).next(inval)).isNil) {
+        nil
+      } {
+        if(test) {
+          trueStream.next(inval) ? default
+        } {
+          falseStream.next(inval) ? default
+        };
+      };
+    }, {
+      trueStream.reset;
+      falseStream.reset;
+    })
+  }
+}
 
-	storeArgs { ^[key, repeats] }
+Peach : Pattern {
+  var <>dict, <>default;
+  *new { arg dict, default;
+    ^super.newCopyArgs(dict, default ?? 0.5);
+  }
+  storeArgs { ^[dict,default ] }
+  asStream {
+    ^FuncStream({ |inval|
+      var test;
 
-	asStream {
-		var	keystream = key.asStream;
-		// avoid creating a routine
-		var stream = FuncStream({ |inevent| inevent !? { inevent[keystream.next(inevent)] } });
-		^if(repeats.isNil) { stream } { stream.fin(repeats) }
-	}
-
-	embedInStream { |inval|
-		var outval, keystream = key.asStream;
-		repeats.value(inval).do {
-			outval = inval[keystream.next(inval)];
-			if(outval.isNil) { ^inval };
-			inval = outval.yield;
-		};
-		^inval
-	}
-}*/
-
-Pvol : ListPattern {
-	var <>offset;
-	*new { arg dict;
-		^super.new(dict)
-	}
-
-  // asStream {
-  //   var	keystream = key.asStream;
-  //   // avoid creating a routine
-  //   var stream = FuncStream({ |inevent| inevent !? { inevent[keystream.next(inevent)] } });
-  //   ^if(repeats.isNil) { stream } { stream.fin(repeats) }
-  // }
-
-	embedInStream {  arg inval;
-		var item, offsetValue;
-		offsetValue = offset.value(inval);
-		if (inval.eventAt('reverse') == true, {
-			repeats.value(inval).do({ arg j;
-				list.size.reverseDo({ arg i;
-					item = list.wrapAt(i + offsetValue);
-					inval = item.embedInStream(inval);
-				});
-			});
-		},{
-			repeats.value(inval).do({ arg j;
-				list.size.do({ arg i;
-					item = list.wrapAt(i + offsetValue);
-					inval = item.embedInStream(inval);
-				});
-			});
-		});
-		^inval;
-	}
-	storeArgs { ^[ list, repeats, offset ] }
+      if((test = (dict.at(inval.symbol.asSymbol)).next(inval)).isNil) {
+        default;
+      } {
+        dict.at(inval.symbol.asSymbol);
+      };
+    }, {});
+  }
 }
 
 RePevent : Pattern {
