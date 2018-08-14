@@ -32,19 +32,19 @@ PifRest : Pattern {
 }
 
 Peach : Pattern {
-  var <>dict, <>default;
-  *new { arg dict, default;
-    ^super.newCopyArgs(dict, default ?? 0.5);
+  var <>key, <>dict, <>default;
+  *new { arg key, dict, default;
+    ^super.newCopyArgs(key, dict, default ?? 0.5);
   }
-  storeArgs { ^[dict,default ] }
+  storeArgs { ^[key,dict,default ] }
   asStream {
     ^FuncStream({ |inval|
       var test;
 
-      if((test = (dict.at(inval.symbol.asSymbol)).next(inval)).isNil) {
+      if((test = (dict.at(inval.at(key).asSymbol)).next(inval)).isNil) {
         default;
       } {
-        dict.at(inval.symbol.asSymbol);
+        dict.at(inval.at(key).asSymbol);
       };
     }, {});
   }
@@ -79,6 +79,10 @@ Prepetition {
         evt[\octave] = (evt.octave ?? 5) + evt.shift;
         evt[\amp] = (evt.amp ?? 0.125) + evt.accent;
         evt[\midinote] = evt.midinote + (if (evt.typeof != \percussion, { 12 * evt.octave }, { 0 }));
+
+        // if both are defined, i'll discard them.
+        if (evt.fast.notNil && evt.slow.isNil) { evt[\stretch] = 1/evt.fast; };
+        if (evt.fast.isNil && evt.slow.notNil) { evt[\stretch] = evt.slow; };
 
         // i'm lazy and don't want to specify an Event type if i already defined a (midi) channel.
         if (evt.chan.notNil && evt.type.isNil) { evt[\type] = \md; };
