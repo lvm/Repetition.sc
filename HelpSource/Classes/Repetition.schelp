@@ -174,6 +174,7 @@ SUBSECTION:: Booting up
 And last but not least, the recommended way [*] to boot SuperCollider link::Classes/Server:: + link::Classes/ProxySpace:: with link::Classes/Repetition::
 
 code::
+(
 p = ProxySpace.push(s);
 p.makeTempoClock;
 p.clock.tempo = 2;
