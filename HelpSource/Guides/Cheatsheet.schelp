@@ -17,60 +17,61 @@ SequenceableCollection;
 code::
 // SIGNALS
 // Pink Noise.
-PinkNoise.ar(mul, add);
+PinkNoise.ar;
 // non-bandlimited impulses. AKA: Clicks. See Blip.
-Impulse.ar(freq, phase, mul, add);
+Impulse.ar;
 // Fast Sine.
-FSinOsc.ar(freq, iphase, mul);
-
+FSinOsc.ar;
 
 // FX
 // Bit crush and Sample Rate reducing.
-Decimator.ar(in, rate, bits, mul, add);
+Decimator.ar;
 // Basic Reverb. See JPVerb or GVerb.
-FreeVerb.ar(in, mix, room, damp, mul, add);
+FreeVerb.ar;
 // Signal Degradation
-WaveLoss.ar(in, drop, outof, mode, mul, add);
+WaveLoss.ar;
 // Pitch shift
-Squiz.ar(in, pitchratio, zcperchunk, memlen, mul, add);
+Squiz.ar;
 // Granular pitch shift
-PitchShift.ar(in, windowSize, pitchRatio, pitchDispersion, timeDispersion, mul, add);
+PitchShift.ar;
 // All pass delay w/ linear interpolation.
-AllpassL.ar(in, maxdelaytime, delaytime, decaytime, mul, add);
+AllpassL.ar;
 // Simple delay w/ linear interpolation.
-DelayL.ar(in, maxdelaytime, delaytime, mul, add);
+DelayL.ar;
 
 // CONTROL RATE
 // Sine wave.
-SinOsc.kr(freq, phase, mul, add);
+SinOsc.kr;
 // Squarish wave.
-LFPulse.kr(freq, iphase, width, mul, add);
+LFPulse.kr;
 // Tracks XY-axis. warp: 0 -> \linear, 1 -> \exponential.
-MouseX.kr(min, max, warp, lag);
-MouseY.kr(min, max, warp, lag);
+MouseX.kr;
+MouseY.kr;
 
 // EQ
 // Resonant High Pass Filter. Allows frequencies >= freq.
-RHPF.ar(in, freq, rq, mul, add);
+RHPF.ar;
 // Resonant Low Pass Filter. Allows frequencies =< freq.
-RLPF.ar(in, freq, rq, mul, add);
+RLPF.ar;
 // Attenuate or boost a given frequency. db < 0 attenuate, db > 0 boosts.
-MidEQ.ar(in, freq, rq, db, mul, add);
+MidEQ.ar;
 
 // ENVELOPES (normally with doneAction:2)
-EnvGen.ar(envelope, gate, levelScale, lebelBias, timeScale, doneAction);
-Env.adsr(attack, decay, sustain, release, peak, curve, bias);
-Env.perc(attack, release, level, curve);
+EnvGen.ar;
+Env.adsr;
+Env.perc;
 
 // MIXING
 // Reads inputs. See In.
-SoundIn.ar(in, mul, add);
+SoundIn.ar;
 // Mixes an array of signals into a single signal (or an array of).
-Mix.ar(signals_array);
+Mix.ar;
 // A Limiter. See Normalizer. See Compander.
-Limiter.ar(in, level, dur);
+Limiter.ar;
 // Sample accurate output. See Out.
-OffsetOut.ar(out, channelsArray);
+OffsetOut.ar;
+// Send signal to a bus, crossfading with previous contents.
+XOut.ar;
 ::
 
 

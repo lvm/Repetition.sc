@@ -120,13 +120,13 @@ SECTION:: Actually playing something
 SUBSECTION:: The "Player".
 
 LIST::
-## code::rePlayer(...args)::, similar to link::Classes/Pbind::.
+## code::pbind(...args)::, pretty much a link::Classes/Pbind::.
 ::
 
 
 code::
 (
-~x = "bd sn".bjorklund(3,8).rePlayer(
+~x = "bd sn".bjorklund(3,8).pbind(
   \tempo, 120/60,
   \amp, 0.5,
   \type,\md,
@@ -140,7 +140,7 @@ code::
 
 code::
 (
-~x =  "c g a".bjorklund(6,8).rePlayer(
+~x =  "c g a".bjorklund(6,8).pbind(
   \tempo, 120/60,
   \amp, 0.5,
   \instrument, \default,
@@ -156,7 +156,7 @@ SECTION:: Extras
 
 SUBSECTION:: Custom MIDI Event Types
 
-Currently, link::Classes/Repetition:: provides two custom link::Classes/Event:: types: code::\md:: and code::\cc::. Both are a simplification of a normal link::Classes/Event:: type code::\midi:: declaring by default code::~type::, code::~midiout::, code::~chan:: (code::9:: by default) and code::~amp::.
+Currently, link::Classes/Repetition:: provides custom link::Classes/Event:: types; which are a simplification of a normal link::Classes/Event:: type code::\midi:: declaring by default code::~type::, code::~midiout::, code::~chan:: (code::9:: by default) and code::~amp::.
 To use them you just need to call code::Repetition.initMIDI:: and code::Repetition.midiEventTypes:: .
 Example:
 
@@ -174,13 +174,14 @@ SUBSECTION:: Booting up
 And last but not least, the recommended way [*] to boot SuperCollider link::Classes/Server:: + link::Classes/ProxySpace:: with link::Classes/Repetition::
 
 code::
-(
-r = Repetition.new;
+p = ProxySpace.push(s);
+p.makeTempoClock;
+p.clock.tempo = 2;
+p.quant = 4
+;
+r = Repetition(p);
 m = r.initMIDI("Midi Through", "Midi Through Port-0");
-p = r.getProxySpace;
-
-r.midiEventTypes;  // setup repetition midi stuff
-ProxyMixer(p); // and a nice proxymixer too
+r.midiEventTypes;
 )
 ::
 
@@ -190,13 +191,10 @@ ProxyMixer(p); // and a nice proxymixer too
 CLASSMETHODS::
 
 METHOD:: new
-Creates a Repetition instance, which will automatically boot the link::Classes/Server:: + link::Classes/ProxySpace::
+Creates a link::Classes/Repetition:: instance
 
-ARGUMENT:: default_tempo
-Defines the tempo clock for link::Classes/ProxySpace::
-
-ARGUMENT:: quant
-Defines the quantization for link::Classes/ProxySpace::
+ARGUMENT:: proxyspace
+link::Classes/ProxySpace:: instance
 
 returns:: link::Classes/Repetition::
 
@@ -205,23 +203,12 @@ PRIVATE:: outmidi, ps, srv
 INSTANCEMETHODS::
 
 METHOD:: start
-Creates a Repetition instance, which will automatically boot the link::Classes/Server:: + link::Classes/ProxySpace::
+Creates a Repetition instance
 
-ARGUMENT:: default_tempo
-Defines the tempo clock for link::Classes/ProxySpace::
-
-ARGUMENT:: quant
-Defines the quantization for link::Classes/ProxySpace::
+ARGUMENT:: proxyspace
+link::Classes/ProxySpace:: instance
 
 returns:: link::Classes/Repetition::
-
-
-METHOD:: initSuperDirt
-(describe method here)
-Starts link::Classes/SuperDirt:: with pretty much default settings, except it starts with 8 orbits (4 stereo) instead of just 2
-
-returns:: link::Classes/SuperDirt::
-
 
 METHOD:: initMIDI
 Starts link::Classes/MIDIClient:: if not running, and creates link::Classes/MIDIOut:: instance
@@ -237,36 +224,18 @@ MIDI Latency. See link::Classes/MIDIOut::
 
 returns:: link::Classes/MIDIOut::
 
-
 METHOD:: midiEventTypes
-Creates two link::Classes/Event:: types, code::\md:: and code::\cc::
+Creates link::Classes/Event:: types, code::\md::, code::\cc::, code::\prog::, and code::\panic::.
 
 returns:: link::Classes/Repetition::
 
+METHOD:: cc
+Returns the CC number
 
-METHOD:: on
-Sends a Note On to a MIDI Channel
+ARGUMENT:: key
+CC name (ie: `\cc7` or `\amp`)
 
-ARGUMENT:: chan
-Channel number
-
-ARGUMENT:: note
-MIDI Note number
-
-ARGUMENT:: vel
-MIDI Velocity
-
-returns:: link::Classes/Repetition::
-
-
-METHOD:: off
-Sends a Note Off to a MIDI Channel
-
-ARGUMENT:: chan
-Channel number
-
-returns:: link::Classes/Repetition::
-
+returns:: link::Classes/Integer::
 
 METHOD:: proxySpace
 Returns the link::Classes/ProxySpace:: instance

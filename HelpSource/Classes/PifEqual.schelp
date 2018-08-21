@@ -1,0 +1,20 @@
+class:: PifEqual
+summary:: Embed values in a list if another ListPattern is equal to something.
+related:: Classes/Pser
+categories:: Streams-Patterns-Events>Patterns
+
+description::
+
+Simplified version of Pif(Pbinop(...), true, false).
+
+Examples::
+
+code::
+(
+Pbind(
+  \a, Pseq([1,2,1,2,1,2], inf),
+  \b, PifEqual(\a, 2, 3, 0),
+)
+)
+::
+
