@@ -1,0 +1,21 @@
+class:: Peach
+summary:: Returns values from a Dict for each ...value.
+related:: Classes/Pser
+categories:: Streams-Patterns-Events>Patterns
+
+description::
+
+Returns values from a Dictionary if another ListPattern matches its current value.
+
+Examples::
+
+code::
+(
+Pbind(
+  \dur, 1/4,
+  \midinote, Pseq([36,\rest,42,\rest, 38, \rest, 42, \rest], inf),
+  \amp, Peach(\midinote, (\36: 0.75, \42: 0.9, \38: 0.5), 0.25)
+)
+)
+::
+

@@ -34,6 +34,10 @@ Repetition {
     |proxyspace|
     ps = proxyspace;
     srv = proxyspace.server;
+    // if (proxyspace.notNil, {
+    // }, {
+    // srv = Server.default;
+    // });
 
     // "fake" hackish synthdef
     SynthDef(\r, {}).add;

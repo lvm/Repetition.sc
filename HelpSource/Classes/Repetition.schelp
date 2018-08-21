@@ -1,11 +1,11 @@
 class:: Repetition
-summary:: A set of tools to build a `SequenceableCollection of Events`.
+summary:: A set of tools to build a `Stream` of Events`.
 categories:: Live Coding
 related:: Guides/Cheatsheet
 
 DESCRIPTION::
 
-link::Classes/Repetition:: is a link::Classes/String:: parser that builds a link::Classes/SequenceableCollection:: of link::Classes/Event::. Also, provides a set of methods that can be applied over the List and/or over individual Events.
+link::Classes/Repetition:: is a link::Classes/String:: parser that builds a link::Classes/Stream:: of link::Classes/Event::.
 
 note::
 This software is experimental, mainly an exploration of SuperCollider + Live Coding.
@@ -30,18 +30,13 @@ LIST::
 All of them are "chainable". For example, a Pattern (ab)using every option available:
 
 code::
-"a*3 b@+c' d@!, e+f".repetitionPattern;
--> [
-  ( 'octave': 5, 'dur': 0.14285714285714, 'symbol': a, 'amp': 0.666 ),
-  ( 'octave': 5, 'dur': 0.14285714285714, 'symbol': a, 'amp': 0.666 ),
-  ( 'octave': 5, 'dur': 0.14285714285714, 'symbol': a, 'amp': 0.666 ),
-  ( 'octave': 5, 'dur': 0.071428571428571, 'symbol': b@, 'amp': 0.916 ),
-  ( 'octave': 6, 'dur': 0.071428571428571, 'symbol': c', 'amp': 0.666 ),
-  ( 'octave': 4, 'dur': 0.14285714285714, 'symbol': d@,, 'amp': 0.916 ),
-  ( 'octave': 4, 'dur': 0.14285714285714, 'symbol': d@,, 'amp': 0.916 ),
-  ( 'octave': 5, 'dur': 0.071428571428571, 'symbol': e, 'amp': 0.666 ),
-  ( 'octave': 5, 'dur': 0.071428571428571, 'symbol': f, 'amp': 0.666 )
-]
+"a*3 b@+c' d@!, e+f".asRepetitionStream.nextNRP(23);
+[ ( 'dur': 0.14285714285714, 'symbol': a, 'shift': 0, 'midinote': 9,
+  'typeof': note, 'accent': 0 ), ( 'dur': 0.14285714285714, 'symbol': a, 'shift': 0, 'midinote': 9,
+  'typeof': note, 'accent': 0 ), ( 'dur': 0.14285714285714, 'symbol': a, 'shift': 0, 'midinote': 9,
+  'typeof': note, 'accent': 0 ), ( 'dur': 0.071428571428571, 'symbol': b@, 'shift': 0, 'midinote': 11,
+  'typeof': note, 'accent': 0.25 ), ( 'dur': 0.071428571428571, 'symbol': c', 'shift': 1, 'midinote': 0,
+  'typeof': note, 'accent': 0 ...etc...
 ::
 
 SUBSECTION:: Bjorklund / Euclidean Rhythm
@@ -69,281 +64,90 @@ code::
 -> "sn r r rm r r sn r"
 ::
 
-So, this creates a link::Classes/SequenceableCollection:: of link::Classes/Event:: with 1/8 duration each.
+So, this creates a link::Classes/Stream:: of link::Classes/Event:: with 1/8 duration each.
 
 code::
-"sn rm".bjorklund(3,8).repetitionPattern;
--> [
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \sn, 'amp': 0.9 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \r, 'amp': 0.9 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \r, 'amp': 0.9 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \rm, 'amp': 0.9 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \r, 'amp': 0.9 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \r, 'amp': 0.9 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \sn, 'amp': 0.9 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \r, 'amp': 0.9 )
-]
+"sn rm".bjorklund(3,8).asRepetitionStream.nextNRP(8);
+-> [ ( 'dur': 0.125, 'symbol': sn, 'shift': 0, 'midinote': 38,
+  'typeof': percussion, 'accent': 0 ), ( 'dur': 0.125, 'symbol': r, 'shift': 0, 'midinote': rest,
+  'typeof': rest, 'accent': 0 ), ( 'dur': 0.125, 'symbol': r, 'shift': 0, 'midinote': rest,
+  'typeof': rest, 'accent': 0 ), ( 'dur': 0.125, 'symbol': rm, 'shift': 0, 'midinote': 37,
+  'typeof': percussion, 'accent': 0 ), ( 'dur': 0.125, 'symbol': r, 'shift': 0, 'midinote': rest,
+  'typeof': rest, 'accent': 0 ), ( 'dur': 0.125, 'symbol': r, 'shift...etc...
 ::
 
 
 SUBSECTION:: Type of Patterns
 
-As we established, Repetition will create a link::Classes/SequenceableCollection:: of link::Classes/Event:: and each Event holds the minimum amount of information, so in order to convert them to code::\midinote:: we need to use code::repetitionPattern(typeOf, amplitude, octave)::.
+This is done automagically behind the scenes, so you can evaluate "bd r*3 sd r*3" and it will be converted to the correct Note.
 
 So far, these are available:
 
 LIST::
-## code::\perc::, converts to General MIDI Percussion. See link::Classes/PercSymbol:: for more info.
-## code::\chord::, converts to a Chord.
-## code::\degree::, converts a Note (ABC Format) to its semitone (code::0..12::).
-## code::\freq::, converts a Note (ABC Format) to its frequency.
-## code::\int::, converts to Integer.
+## code::\percussion::, converts to General MIDI Percussion Note.
+## code::\note::, converts to a Note (ABC Format) to its semitone (code::0..12::).
+## code::\chord::, converts to a Chord (a collection of Note)).
+## code::\rest::, converts to a link::Classes/Rest::.
 ::
 
 These callbacks have a shortcut version in the form of a method.
 
 code::
-"bd sn".repetitionPattern(\perc, 0.9);
-"bd sn".perc;
+"bd sn".asRepetitionStream.nextNRP(2);
 -> [
-    ( 'octave': 0, 'dur': 0.5, 'symbol': \bd, 'amp': 0.9, 'midinote': 36 ),
-    ( 'octave': 0, 'dur': 0.5, 'symbol': \sn, 'amp': 0.9, 'midinote': 38 )
+    ( 'dur': 0.5, 'symbol': sn, 'shift': 0, 'midinote': 38, 'typeof': \percussion, 'accent': 0 ),
+    ( 'dur': 0.5, 'symbol': rm, 'shift': 0, 'midinote': 37, 'typeof': \percussion, 'accent': 0 )
 ]
 ::
 
 code::
-"cmaj dmaj7".repetitionPattern(\chord, 5, 0.9);
-"cmaj dmaj7".chord(5, 0.9);
--> [
-    ( 'octave': 5, 'dur': 0.5, 'symbol': \cmaj, 'amp': 0.9, 'midinote': [ 60, 64, 67 ] ),
-    ( 'octave': 5, 'dur': 0.5, 'symbol': \dmaj7, 'amp': 0.9, 'midinote': [ 62, 66, 69, 73 ] )
+"cmaj dmaj7".asRepetitionStream.nextNRP(2);
+-> [ ( 'dur': 0.5, 'symbol': cmaj, 'shift': 0, 'midinote': [ 0, 4, 7 ], 'typeof': \chord, 'accent': 0 ),
+    ( 'dur': 0.5, 'symbol': dmaj7, 'shift': 0, 'midinote': [ 2, 6, 9, 13 ], 'typeof': \chord, 'accent': 0 )
 ]
 ::
 
 code::
-"c d".repetitionPattern(\degree, 4, 0.9);
-"c d".degree(4, 0.9);
--> [
-    ( 'octave': 5, 'dur': 0.5, 'symbol': \c, 'amp': 4, 'midinote': 60 ),
-    ( 'octave': 5, 'dur': 0.5, 'symbol': \d, 'amp': 4, 'midinote': 62 )
-]
-::
-
-code::
-"c d".repetitionPattern(\freq, 4, 0.9);
-"c d".freq(4, 0.9);
--> [
-    ( 'octave': 4, 'dur': 0.5, 'symbol': c, 'amp': 0.9, 'freq': 130.8127826503 ),
-    ( 'octave': 4, 'dur': 0.5, 'symbol': d, 'amp': 0.9, 'freq': 146.8323839587 )
-]
-::
-
-code::
-"60 48".repetitionPattern(\int);
-"60 48".int;
--> [
-    ( 'octave': 5, 'dur': 0.5, 'symbol': 60, 'amp': 0.9, 'midinote': 60 ),
-    ( 'octave': 5, 'dur': 0.5, 'symbol': 48, 'amp': 0.9, 'midinote': 48 )
-]
-::
-
-Also, there's a particular (hacky) method called code::.asEvents(amplitude, octave):: which works over a list of Integers.
-
-code::
-Scale.major.degrees.asEvents(5, 0.9);
--> [
-    ( 'octave': 5, 'dur': 1, 'amp': 0.9, 'midinote': 60 ),
-    ( 'octave': 5, 'dur': 1, 'amp': 0.9, 'midinote': 62 ),
-    ( 'octave': 5, 'dur': 1, 'amp': 0.9, 'midinote': 64 ),
-    ( 'octave': 5, 'dur': 1, 'amp': 0.9, 'midinote': 65 ),
-    ( 'octave': 5, 'dur': 1, 'amp': 0.9, 'midinote': 67 ),
-    ( 'octave': 5, 'dur': 1, 'amp': 0.9, 'midinote': 69 ),
-    ( 'octave': 5, 'dur': 1, 'amp': 0.9, 'midinote': 71 )
-]
-::
-
-SECTION:: Working with the `SequenceableCollection of Events`
-
-SUBSECTION:: SequenceableCollection External Methods
-
-Since we're working with a link::Classes/SequenceableCollection:: pretty much any method that can be applied this Class (and Sub Classes), can be applied here as well.
-
-Additionally, link::Classes/Repetition:: provides a set of methods that can be applied over the link::Classes/SequenceableCollection::.
-
-LIST::
-## code::mute()::, overwrites the amplitude of each Event to zero.
-## code::stretch(n)::, adds code::\stretch, n:: to each Event.
-## code::fast(n)::, shortcut for code::.stretch(1/n)::.
-## code::slow(n)::, shortcut for code::.stretch(n)::.
-## code::freeze(idx, times)::, at index code::idx::, will code::dup:: the amount of code::times::.
-## code::shuffle()::, alias for code::.scramble::.
-## code::with(... args)::, allows to overwrite any argument of each Event. Uses similar syntax as link::Classes/Pbind::.
-## code::probability(chance, callback)::, will apply a code::callback:: to every Event, a code::chance:: percent of the time.
-## code::rarely(callback)::, shortcut for code::.probability(0.25, callback)::.
-## code::sometimes(callback)::, shortcut for code::.probability(0.5, callback)::.
-## code::regularly(callback)::, shortcut for code::.probability(0.75, callback)::.
-## code::every(times, callback)::, applies a code::callback:: every code::times::.
-::
-
-
-code::
-"bd sn".perc
-.fast(2) // stretch 1/2, therefore dur (0.5) * stretch (0.5) = delta 0.25
-.with(\sustain, 2) // adds \sustain to each event
-;
--> [
-    ( 'octave': 0, 'dur': 0.5, 'symbol': \bd, 'amp': 0.9, 'midinote': 36, 'sustain': 2, 'stretch': 0.5 ),
-    ( 'octave': 0, 'dur': 0.5, 'symbol': \sn, 'amp': 0.9, 'midinote': 38, 'sustain': 2, 'stretch': 0.5 )
-]
-::
-
-code::
-"bd sn cp".perc
-.slow(2) // stretch 2. dur (0.3) * stretch (2) = delta 0.66666666666666
-.freeze(1,4) // the event at index 1, cloned 4 times.
-;
--> [
-    ( 'octave': 0, 'dur': 0.33333333333333, 'symbol': \bd, 'amp': 0.9, 'midinote': 36, 'stretch': 2 ),
-    ( 'octave': 0, 'dur': 0.33333333333333, 'symbol': \sn, 'amp': 0.9, 'midinote': 38, 'stretch': 2 ),
-    ( 'octave': 0, 'dur': 0.33333333333333, 'symbol': \sn, 'amp': 0.9, 'midinote': 38, 'stretch': 2 ),
-    ( 'octave': 0, 'dur': 0.33333333333333, 'symbol': \sn, 'amp': 0.9, 'midinote': 38, 'stretch': 2 ),
-    ( 'octave': 0, 'dur': 0.33333333333333, 'symbol': \sn, 'amp': 0.9, 'midinote': 38, 'stretch': 2 ),
-    ( 'octave': 0, 'dur': 0.33333333333333, 'symbol': \cp, 'amp': 0.9, 'midinote': 39, 'stretch': 2 )
-]
-::
-
-
-code::
-"bd sn cp".perc.slow(2).freeze(1,4) // same as before but
-.shuffle // now it's shuffled
--> [
-    ( 'octave': 0, 'dur': 0.33333333333333, 'symbol': \sn, 'amp': 0.9, 'midinote': 38, 'stretch': 2 ),
-    ( 'octave': 0, 'dur': 0.33333333333333, 'symbol': \cp, 'amp': 0.9, 'midinote': 39, 'stretch': 2 ),
-    ( 'octave': 0, 'dur': 0.33333333333333, 'symbol': \sn, 'amp': 0.9, 'midinote': 38, 'stretch': 2 ),
-    ( 'octave': 0, 'dur': 0.33333333333333, 'symbol': \sn, 'amp': 0.9, 'midinote': 38, 'stretch': 2 ),
-    ( 'octave': 0, 'dur': 0.33333333333333, 'symbol': \sn, 'amp': 0.9, 'midinote': 38, 'stretch': 2 ),
-    ( 'octave': 0, 'dur': 0.33333333333333, 'symbol': \bd, 'amp': 0.9, 'midinote': 36, 'stretch': 2 )
-]
-::
-
-
-
-Also, I've added the most common link::Classes/ListPattern:: classes as methods, there isn't a really good reason other than it's more comfortable to type when chaining methods.
-
-code::
-(
-16.collect{ |x| x + x.rand(x, x*2) }.stutter(8).shuffle.pseq(rep: inf, offs: 0);
-[1,2,3].pwrand([0.1,0.5,0.23].normalizeSum, inf).stutter(8);
-)
-::
-
-The available methods are:
-
-LIST::
-## code::pseq::, takes two arguments: code::rep:: (repeats) and code::offs:: (offset).
-## code::pshuf::, takes one argument: code::rep:: (repeats).
-## code::prand::, takes one argument: code::rep:: (repeats).
-## code::pxrand::, takes one argument: code::rep:: (repeats).
-## code::pwrand::, takes two arguments: code::weights:: (weights) and code::rep:: (repeats).
-## code::place::, takes two arguments: code::rep:: (repeats) and code::offs:: (offset).
-::
-
-Note that if you want to use them with link::Classes/Repetition::, you need to treat them as link::Classes/Stream::.
-For example:
-
-code::
-(
-x = "sn rm".bjorklund(3,8).perc.pseq.asStream;
-x.nextN(5);
-)
-
--> [
-  ( 'octave': 0, 'dur': 0.125, 'accent': 0, 'midinote': 38 ),
-  ( 'octave': 0, 'dur': 0.125, 'accent': 0, 'midinote': rest ),
-  ( 'octave': 0, 'dur': 0.125, 'accent': 0, 'midinote': rest ),
-  ( 'octave': 0, 'dur': 0.125, 'accent': 0, 'midinote': 37 ),
-  ( 'octave': 0, 'dur': 0.125, 'accent': 0, 'midinote': rest )
-]
-::
-
-SUBSECTION:: Event External Methods
-
-Since we're working with a link::Classes/Event:: pretty much any method that can be applied this Class, can be applied here as well.
-
-Additionally, link::Classes/Repetition:: provides a set of methods that can be applied over any link::Classes/Event::.
-
-LIST::
-## code::mute()::, overwrites the amplitude of the Event to zero.
-## code::stretch(n)::, adds code::\stretch, n:: to the Event.
-## code::fast(n)::, shortcut for code::.stretch(1/n)::.
-## code::slow(n)::, shortcut for code::.stretch(n)::.
-## code::with(... args)::, overwrite any argument of each Event. Uses similar syntax as link::Classes/Pbind::.
-## code::plus(... args)::, sums the current value of the Event by the argument(s) passed.
-## code::minus(... args)::, rests the current value of the Event by the argument(s) passed.
-## code::mul(... args)::, multiples the current value of the Event by the argument(s) passed.
-## code::div(... args)::, divides the current value of the Event by the argument(s) passed.
-::
-
-
-code::
-var sus = [2,4,1,1/2,3/4].pxrand.asStream;
-"c g".bjorklund(3,8).degree
-.collect(_.with(\sustain, sus.next)) // adds sus.next to \sustain for each Event
-;
--> [
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \c, 'amp': 0.9, 'midinote': 60, 'sustain': 0.5 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \r, 'amp': 0.9, 'midinote': \rest, 'sustain': 1 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \r, 'amp': 0.9, 'midinote': \rest, 'sustain': 0.5 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \g, 'amp': 0.9, 'midinote': 67, 'sustain': 0.75 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \r, 'amp': 0.9, 'midinote': \rest, 'sustain': 1 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \r, 'amp': 0.9, 'midinote': \rest, 'sustain': 4 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \c, 'amp': 0.9, 'midinote': 60, 'sustain': 1 ),
-    ( 'octave': 5, 'dur': 0.125, 'symbol': \r, 'amp': 0.9, 'midinote': \rest, 'sustain': 4 )
-]
-::
-
-
-code::
-var dur = (1/[8,16,32]).pxrand.asStream;
-"c g".bjorklund(3,8).degree
-.collect(_.plus(\dur, dur.next)) // sums dur.next to \dur for each Event
-;
--> [
-    ( 'octave': 5, 'dur': 0.25, 'symbol': \c, 'amp': 0.9, 'midinote': 60 )
-    ( 'octave': 5, 'dur': 0.15625, 'symbol': \r, 'amp': 0.9, 'midinote': \rest )
-    ( 'octave': 5, 'dur': 0.1875, 'symbol': \r, 'amp': 0.9, 'midinote': \rest )
-    ( 'octave': 5, 'dur': 0.25, 'symbol': \g, 'amp': 0.9, 'midinote': 67 )
-    ( 'octave': 5, 'dur': 0.15625, 'symbol': \r, 'amp': 0.9, 'midinote': \rest )
-    ( 'octave': 5, 'dur': 0.1875, 'symbol': \r, 'amp': 0.9, 'midinote': \rest )
-    ( 'octave': 5, 'dur': 0.25, 'symbol': \c, 'amp': 0.9, 'midinote': 60 )
-    ( 'octave': 5, 'dur': 0.15625, 'symbol': \r, 'amp': 0.9, 'midinote': \rest )
+"c d".asRepetitionStream.nextNRP(2);
+-> [ ( 'dur': 0.5, 'symbol': c, 'shift': 0, 'midinote': 0, 'typeof': \chord, 'accent': 0 ),
+    ( 'dur': 0.5, 'symbol': d, 'shift': 0, 'midinote': 2, 'typeof': \chord, 'accent': 0 )
 ]
 ::
 
 
 SECTION:: Actually playing something
 
-SUBSECTION:: MIDI Channels and SynthDefs.
-
-There are two kind of "output": MIDI Channels and SynthDefs, each one has a special method:
+SUBSECTION:: The "Player".
 
 LIST::
-## code::ch(N, repetitions)::, adds code::[\type,\md, \chan, N]:: to each Event and creates a link::Classes/Pseq:: instance.
-## code::synth(synthdef, repetitions)::, adds code::[\type,\note, \instrument, synthdef]:: to each Event and creates an infinite link::Classes/Pseq:: instance.
+## code::pbind(...args)::, pretty much a link::Classes/Pbind::.
 ::
 
 
 code::
 (
-~x =  "bd sn".bjorklund(3,8).perc.with(\sustain, 2)
-.ch(9) // goes to MIDI Channel 9 (actually, Channel 10 because most devices start counting from 1)
+~x = "bd sn".bjorklund(3,8).pbind(
+  \tempo, 120/60,
+  \amp, 0.5,
+  \type,\md,
+  \chan, 9,
+  \sustain, 1,
+  \dur, 1/4,
+)
+;
 )
 ::
 
 code::
 (
-~x =  "c g a".bjorklund(6,8).degree.with(\sustain, 1)
-.synth(\default) // uses \default synthdef
+~x =  "c g a".bjorklund(6,8).pbind(
+  \tempo, 120/60,
+  \amp, 0.5,
+  \instrument, \default,
+  \sustain, 1,
+  \dur, 1/4,
+)
+;
 )
 ::
 
@@ -352,7 +156,7 @@ SECTION:: Extras
 
 SUBSECTION:: Custom MIDI Event Types
 
-Currently, link::Classes/Repetition:: provides two custom link::Classes/Event:: types: code::\md:: and code::\cc::. Both are a simplification of a normal link::Classes/Event:: type code::\midi:: declaring by default code::~type::, code::~midiout::, code::~chan:: (code::9:: by default) and code::~amp::.
+Currently, link::Classes/Repetition:: provides custom link::Classes/Event:: types; which are a simplification of a normal link::Classes/Event:: type code::\midi:: declaring by default code::~type::, code::~midiout::, code::~chan:: (code::9:: by default) and code::~amp::.
 To use them you just need to call code::Repetition.initMIDI:: and code::Repetition.midiEventTypes:: .
 Example:
 
@@ -371,12 +175,14 @@ And last but not least, the recommended way [*] to boot SuperCollider link::Clas
 
 code::
 (
-r = Repetition.new;
+p = ProxySpace.push(s);
+p.makeTempoClock;
+p.clock.tempo = 2;
+p.quant = 4
+;
+r = Repetition(p);
 m = r.initMIDI("Midi Through", "Midi Through Port-0");
-p = r.getProxySpace;
-
-r.midiEventTypes;  // setup repetition midi stuff
-ProxyMixer(p); // and a nice proxymixer too
+r.midiEventTypes;
 )
 ::
 
@@ -386,13 +192,10 @@ ProxyMixer(p); // and a nice proxymixer too
 CLASSMETHODS::
 
 METHOD:: new
-Creates a Repetition instance, which will automatically boot the link::Classes/Server:: + link::Classes/ProxySpace::
+Creates a link::Classes/Repetition:: instance
 
-ARGUMENT:: default_tempo
-Defines the tempo clock for link::Classes/ProxySpace::
-
-ARGUMENT:: quant
-Defines the quantization for link::Classes/ProxySpace::
+ARGUMENT:: proxyspace
+link::Classes/ProxySpace:: instance
 
 returns:: link::Classes/Repetition::
 
@@ -401,23 +204,12 @@ PRIVATE:: outmidi, ps, srv
 INSTANCEMETHODS::
 
 METHOD:: start
-Creates a Repetition instance, which will automatically boot the link::Classes/Server:: + link::Classes/ProxySpace::
+Creates a Repetition instance
 
-ARGUMENT:: default_tempo
-Defines the tempo clock for link::Classes/ProxySpace::
-
-ARGUMENT:: quant
-Defines the quantization for link::Classes/ProxySpace::
+ARGUMENT:: proxyspace
+link::Classes/ProxySpace:: instance
 
 returns:: link::Classes/Repetition::
-
-
-METHOD:: initSuperDirt
-(describe method here)
-Starts link::Classes/SuperDirt:: with pretty much default settings, except it starts with 8 orbits (4 stereo) instead of just 2
-
-returns:: link::Classes/SuperDirt::
-
 
 METHOD:: initMIDI
 Starts link::Classes/MIDIClient:: if not running, and creates link::Classes/MIDIOut:: instance
@@ -433,36 +225,18 @@ MIDI Latency. See link::Classes/MIDIOut::
 
 returns:: link::Classes/MIDIOut::
 
-
 METHOD:: midiEventTypes
-Creates two link::Classes/Event:: types, code::\md:: and code::\cc::
+Creates link::Classes/Event:: types, code::\md::, code::\cc::, code::\prog::, and code::\panic::.
 
 returns:: link::Classes/Repetition::
 
+METHOD:: cc
+Returns the CC number
 
-METHOD:: on
-Sends a Note On to a MIDI Channel
+ARGUMENT:: key
+CC name (ie: `\cc7` or `\amp`)
 
-ARGUMENT:: chan
-Channel number
-
-ARGUMENT:: note
-MIDI Note number
-
-ARGUMENT:: vel
-MIDI Velocity
-
-returns:: link::Classes/Repetition::
-
-
-METHOD:: off
-Sends a Note Off to a MIDI Channel
-
-ARGUMENT:: chan
-Channel number
-
-returns:: link::Classes/Repetition::
-
+returns:: link::Classes/Integer::
 
 METHOD:: proxySpace
 Returns the link::Classes/ProxySpace:: instance

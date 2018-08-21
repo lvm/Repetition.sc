@@ -1,0 +1,21 @@
+class:: PifEqual
+summary:: Embed values in a list if another ListPattern is equal to \rest.
+related:: Classes/Pser
+categories:: Streams-Patterns-Events>Patterns
+
+description::
+
+Simplified version of Pif(Pbinop(...), true, false).
+
+Examples::
+
+code::
+(
+Pbind(
+  \dur, 1/4,
+  \notemidi, Pseq([36,\rest,42,\rest], inf),
+  \midinote, Pstutter(PifRest(\notemidi, 1, 2), Pkey(\notemidi)),
+)
+)
+::
+
