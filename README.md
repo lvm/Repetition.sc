@@ -1,6 +1,8 @@
 # Repetition.sc
 
-A set of tools to build a `SequenceableCollection of Events`.
+A set of tools to build a `Stream` of Events`.
+
+Current version: `0.3`
 
 ## Installation
 
