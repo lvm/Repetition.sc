@@ -5,8 +5,8 @@
 
 PifRest : Pattern {
   var	<>key, <>iftrue, <>iffalse, <>default;
-  *new { |condition, iftrue, iffalse, default|
-    ^super.newCopyArgs(condition, iftrue, iffalse, default)
+  *new { |key, iftrue, iffalse, default|
+    ^super.newCopyArgs(key, iftrue, iffalse, default)
   }
   storeArgs { ^[key, iftrue, iffalse,default] }
   asStream {
@@ -30,6 +30,7 @@ PifRest : Pattern {
     })
   }
 }
+
 PifEqual : Pattern {
   var	<>key, <>condition, <>iftrue, <>iffalse, <>default;
   *new { |key, condition, iftrue, iffalse, default|
@@ -140,3 +141,30 @@ Linda {
   }
 }
 
+
++ Pbind {
+
+  fx {
+    |... args|
+    ^Pfx(this, *args);
+  }
+
+}
+
++ Pchain {
+
+  fx {
+    |... args|
+    ^Pfx(this, *args);
+  }
+
+}
+
++ Pfx {
+
+  fx {
+    |... args|
+    ^Pfx(this, *args);
+  }
+
+}
