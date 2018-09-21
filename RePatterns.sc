@@ -98,8 +98,7 @@ RePevent : Pattern {
 
 Prepetition {
   *new {
-    ^Prout({
-      |evt|
+    ^Prout({ |evt|
       while { evt.notNil } {
 
         // "defaults"
@@ -122,11 +121,9 @@ Prepetition {
 }
 
 Linda {
-  *new {
-    |lsystem basepattern|
+  *new { |lsystem basepattern|
     var lsys = lsystem.asStream;
-    var lindenmayer = Prout({
-      |evt|
+    var lindenmayer = Prout({ |evt|
        while { evt.notNil } {
         evt[\type] = \md;
         evt[\amp] = evt[\amp] ?? 0.9;
@@ -144,27 +141,18 @@ Linda {
 
 + Pbind {
 
-  fx {
-    |... args|
-    ^Pfx(this, *args);
-  }
+  fx { |... args| ^Pfx(this, *args); }
 
 }
 
 + Pchain {
 
-  fx {
-    |... args|
-    ^Pfx(this, *args);
-  }
+  fx { |... args| ^Pfx(this, *args); }
 
 }
 
 + Pfx {
 
-  fx {
-    |... args|
-    ^Pfx(this, *args);
-  }
+  fx { |... args| ^Pfx(this, *args); }
 
 }

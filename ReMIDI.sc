@@ -1,6 +1,6 @@
 /*
-        ReMIDI.sc
-        MIDI Stuff, part of the Repetition.sc project
+ReMIDI.sc
+MIDI Stuff, part of the Repetition.sc project
 */
 
 + Repetition {
@@ -167,7 +167,9 @@
       ~midicmd = \control;
       ~midiout = outmidi;
       ~chan = ~chan ?? 9;
-      ~ctlNum = ~ctlNum ?? 23;
+      // ~ctlNum = ~ctlNum ?? 23;
+      ~ctlNum = ~ctlNum ?? ~cc ?? 23;
+      ~control = ~control ?? ~value ?? 0;
       currentEnvironment.play;
     });
 
@@ -190,4 +192,17 @@
       currentEnvironment.play;
     });
   }
+
+  midiCustomRoles {
+    AbstractPlayControl.proxyControlClasses.put(\cc, PatternControl);
+    AbstractPlayControl.buildMethods.put(\cc,
+      #{ arg pattern, proxy, channelOffset=0, index;
+        var values = proxy.source.patterns.at(1).patternpairs,
+        ch_idx = values.atIdentityHash(\chan),
+        chan = values.at(ch_idx + 1)
+        ;
+        Pbindf(pattern, \type, \cc, \chan, chan).buildForProxy( proxy, channelOffset, index )
+    });
+  }
+
 }

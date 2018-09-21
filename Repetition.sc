@@ -33,11 +33,11 @@ Repetition {
   start {
     |proxyspace|
     ps = proxyspace;
-    srv = proxyspace.server;
-    // if (proxyspace.notNil, {
-    // }, {
-    // srv = Server.default;
-    // });
+    if (proxyspace.isNil, {
+      srv = Server.default;
+    }, {
+      srv = proxyspace.server;
+    });
 
     // "fake" hackish synthdef
     SynthDef(\r, {}).add;

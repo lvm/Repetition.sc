@@ -5,8 +5,7 @@
 
 + Routine {
 
-  nextRP {
-    |inval|
+  nextRP { |inval|
     var value = this.value(inval), tmp;
 
     // then we add the amplitude. if the `symbol` has `@`,  will sum `0.25`
@@ -24,17 +23,16 @@
     ^value;
   }
 
-  player {
-    |... args|
-    ^Pchain(Prepetition(), Pbind(\beat, Ptime(inf)), Pbind(*args), RePevent(this));
+  player { |... args|
+    //^Pchain(Prepetition(), Pbind(\beat, Ptime(inf)), Pbind(*args), RePevent(this));
+    ^Pchain(Prepetition(), Pbind(*args), RePevent(this));
   }
 
 }
 
 + Object {
 
-  nextNRP {
-    |n, inval|
+  nextNRP { |n, inval|
     ^Array.fill(n, { this.nextRP(inval) });
   }
 
@@ -81,8 +79,7 @@
   }
 
   // requires `Bjorklund` Quark.
-  bjorklund {
-    |k, n, rotate=0|
+  bjorklund { |k, n, rotate=0|
     var hit = Pseq(this.split($ ), inf).asStream;
 
     ^Bjorklund(k, n)
@@ -100,8 +97,7 @@
     ;
   }
 
-  createSingleEvent {
-    |dur=1|
+  createSingleEvent { |dur=1|
     var item = this;
 
     if (item.contains("+")) {
@@ -145,8 +141,7 @@
 
   shuffle { ^this.split($ ).scramble.join(" "); }
 
-  everyN {
-    |times, callback|
+  everyN { |times, callback|
     ^this
     .replace("/","").split($ ) // individual notes
     .reject { |x| x.size == 0 } // reject anything that's not a note
@@ -161,8 +156,7 @@
     .join(" ")
     ;
   }
-  probability {
-    |chance, callback|
+  probability { |chance, callback|
     ^this
     .replace("/","").split($ ) // individual notes
     .reject { |x| x.size == 0 } // reject anything that's not a note
@@ -182,8 +176,7 @@
   regularly { |callback| ^this.probability(0.75, callback); }
   always { |callback| ^this.probability(1.0, callback);  }
 
-	<< {
-    |notes|
+	<< { |notes|
     var stream = Pseq(notes.split($ ), inf).asStream;
     ^this
     .replace("/ ", "")
@@ -212,17 +205,19 @@
   }
 
   // player short
-  pbind {
-    |... args|
+  pbind { |... args|
     ^this
     .asRepetitionStream
     .player(*args);
   }
-  <@> {
-    |... args|
+  <@> { |... args|
     ^this
     .asRepetitionStream
     .player(*args.at(0));
+  }
+
+  <!> { |... args|
+    ^this.postln;
   }
 
 }
@@ -258,8 +253,7 @@
     ^item.asSymbol;
   }
 
-  maybeSplit {
-    |sep|
+  maybeSplit { |sep|
     var item = this;
 
     if (item.isKindOf(String)) {
@@ -345,8 +339,7 @@
 
 + Event {
 
-  applyAccent {
-    |gain=0.9|
+  applyAccent { |gain=0.9|
     var symbol = this.at(\symbol), accent = 0;
 
     if (symbol.isKindOf(List) || symbol.isKindOf(Array)) {
@@ -424,8 +417,7 @@
 
   uniq {
     var result = List.new;
-    this.do{
-      |item|
+    this.do{ |item|
       if (result.indexOfEqual(item).isNil) {
         result.add( item );
       }
@@ -433,36 +425,20 @@
     ^result.asArray;
   }
 
-  pseq {
-    |rep = inf, offs = 0|
-    ^Pseq(this, rep, offs);
-  }
+  pseq { |rep = inf, offs = 0| ^Pseq(this, rep, offs); }
 
-  pshuf {
-    |rep = inf|
-    ^Pshuf(this, rep);
-  }
+  pshuf { |rep = inf| ^Pshuf(this, rep); }
 
-  prand {
-    |rep = inf|
-    ^Prand(this, rep);
-  }
+  prand { |rep = inf| ^Prand(this, rep); }
 
-  pxrand {
-    |rep = inf|
-    ^Pxrand(this, rep);
-  }
+  pxrand { |rep = inf| ^Pxrand(this, rep); }
 
-  pwrand {
-    |weights, rep = inf|
+  pwrand { |weights, rep = inf|
     weights = weights ?? [(1 / this.size) ! this.size].normalizeSum;
     ^Pwrand(this, weights, rep);
   }
 
-  place {
-    |rep = inf, offs = 0|
-    ^Place(this, rep, offs);
-  }
+  place { |rep = inf, offs = 0| ^Place(this, rep, offs); }
 
   // alias because String.shuffle
   shuffle { ^this.scramble; }
