@@ -8,15 +8,10 @@
 */
 
 Repetition {
-  classvar itself;
-  classvar <srv;
-  classvar <ps;
-  classvar <outmidi;
-  classvar <samples;
+  classvar itself, <srv, <ps, <outmidi, <outmidicc, <samples;
 
 
-  *new {
-    |proxyspace|
+  *new { |proxyspace|
 
     if(itself.isNil){
       itself = super.new;
@@ -30,8 +25,7 @@ Repetition {
     samples = (); // Dictionary.new;
   }
 
-  start {
-    |proxyspace|
+  start { |proxyspace|
     ps = proxyspace;
     if (proxyspace.isNil, {
       srv = Server.default;
@@ -47,13 +41,21 @@ Repetition {
     "-> Repetition Loaded".postln;
   }
 
-  initMIDI {
-    |dev, port, latency|
+  initMIDI { |dev, port, latency|
     if (MIDIClient.initialized.not) {
       MIDIClient.init;
     };
-    outmidi = MIDIOut.newByName(dev, port).latency = (latency ?? Server.default.latency);
+    ^MIDIOut.newByName(dev, port).latency = (latency ?? Server.default.latency);
+  }
+
+  midiOut { |dev, port, latency|
+    outmidi = this.initMIDI(dev, port, latency);
     ^outmidi;
+  }
+
+  midiOutCC { |dev, port, latency|
+    outmidicc = this.initMIDI(dev, port, latency);
+    ^outmidicc;
   }
 
   server {

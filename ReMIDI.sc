@@ -165,7 +165,7 @@ MIDI Stuff, part of the Repetition.sc project
       |server|
       ~type = \midi;
       ~midicmd = \control;
-      ~midiout = outmidi;
+      ~midiout = outmidicc;
       ~chan = ~chan ?? 9;
       // ~ctlNum = ~ctlNum ?? 23;
       ~ctlNum = ~ctlNum ?? ~cc ?? 23;
