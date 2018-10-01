@@ -82,7 +82,8 @@ RePevent : Pattern {
 	var <>pattern, <>event;
 
 	*new { arg pattern, event;
-		^super.newCopyArgs(pattern, event ?? { Event.default });
+    // ^super.newCopyArgs(pattern, event ?? { Event.default });
+    ^super.newCopyArgs(pattern, event ?? { (chan: 9, amp: 0.9, dur: 1/4) });
 	}
 	storeArgs { ^[pattern, event] }
 	embedInStream { arg inval;
@@ -91,7 +92,7 @@ RePevent : Pattern {
 		loop {
 			outval = stream.nextRP(event);
 			if (outval.isNil) { ^inval };
-			inval = outval.yield
+      inval = outval.yield
 		}
 	}
 }

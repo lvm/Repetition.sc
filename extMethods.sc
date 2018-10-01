@@ -60,22 +60,42 @@
     ;
   }
 
-  asRepetitionSequence {
-    ^this
-    .parseRepetition
-    .pseq(inf)
+  asRepetitionSequence { |... args|
+    var rePattern = this.parseRepetition;
+    var pattern = rePattern.pseq(inf);
+
+    if(args.notNil) {
+      if(args.find([\seq, \rnd]).notNil, {
+        pattern = rePattern.prand(inf);
+      }, {
+        if(args.find([\seq, \xrnd]).notNil, {
+        pattern = rePattern.pxrand(inf);
+        }, {
+          if(args.find([\seq, \shuf]).notNil, {
+            pattern = rePattern.pshuf(inf);
+          })
+          ;
+        })
+        ;
+      })
+      ;
+    }
+    ;
+
+    ^pattern
     ;
   }
 
-  asRepetitionStream {
+  asRepetitionStream { |... args|
     ^this
-    .asRepetitionSequence
+    .asRepetitionSequence(*args)
     .asStream
     ;
   }
 
   classExists {
-    ^Class.allClasses.collect(_.asString).indexOfEqual(this).notNil;
+    ^this.asSymbol.asClass.notNil;
+    // ^Class.allClasses.collect(_.asString).indexOfEqual(this).notNil;
   }
 
   // requires `Bjorklund` Quark.
@@ -180,8 +200,9 @@
     var stream = Pseq(notes.split($ ), inf).asStream;
     ^this
     .replace("/ ", "")
-    .split($ )
-    .collect { |p| if (p.asInt.asBoolean) { stream.next.asString } { "r" } }
+    .asList
+    .reject{ |x| x.asString.stripWhiteSpace.isEmpty }
+    .collect { |p| if (p.asString == "1") { stream.next.asString } { "r" } }
     .join(" ")
     ;
   }
@@ -207,12 +228,12 @@
   // player short
   pbind { |... args|
     ^this
-    .asRepetitionStream
+    .asRepetitionStream(*args)
     .player(*args);
   }
   <@> { |... args|
     ^this
-    .asRepetitionStream
+    .asRepetitionStream(*args)
     .player(*args.at(0));
   }
 
@@ -286,27 +307,6 @@
       });
 
     ^typeof;
-  }
-
-  asReNote {
-    var symbol = this, midinote = \rest;
-
-    if (symbol.percussion.notNil,
-      { midinote = symbol.percussion; },
-      {
-        if (symbol.chord.notNil,
-          { midinote = symbol.chord(0); },
-          {
-            if (symbol.midi.notNil,
-              { midinote = symbol.midi(0); },
-              {
-                if(symbol.asGMPerc.notNil)
-                { midinote = symbol.asGMPerc; }
-            });
-        });
-    });
-
-    ^midinote;
   }
 
   parseEvents {

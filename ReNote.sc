@@ -185,29 +185,13 @@ ReProgression {
     ^progs.keys.asArray;
   }
 
-  init {
-    |prg|
+  init { |prg|
     prog = prg;
     ^if (progs.at(prg).notNil) { progs.at(prg) } { [0] };
   }
 
 }
 
-
-+ Integer {
-  toABC {
-    ^ReNote.theTwelve.findKeyForValue(this.fold(0,11));
-  }
-}
-
-
-+ String {
-  toNote {
-    ^ReNote(this.toLower.asSymbol);
-  }
-}
-
-// SuperHelpers for ABC / Percussion notation parsing.
 
 + Scale {
   chords {
@@ -235,8 +219,7 @@ ReProgression {
     ^(this.degrees + chords.collect(ReChord(_)));
   }
 
-  chordProgression {
-    |prog_name = \eleven|
+  chordProgression { |prog_name = \eleven|
     var progression = ReProgression(prog_name);
     var chords = this.chords;
 
@@ -281,10 +264,24 @@ ReProgression {
 
 }
 
+
+
++ Integer {
+
+  toABC { ^ReNote.theTwelve.findKeyForValue(this.fold(0,11)); }
+
+}
+
+
 + String {
 
-  midi {
-    |octave=5|
+  toNote { ^ReNote(this.toLower.asSymbol); }
+
+  asReNote {
+    ^this.split($ ).collect(_.asSymbol).collect(_.asReNote);
+  }
+
+  midi { |octave=5|
     var whites = (\c: 0, \d: 2, \e: 4, \f:5, \g:7, \a:9, \b:11);
     var note = this.toLower;
     var tone = whites.at(note.at(0).asSymbol);
@@ -334,8 +331,7 @@ ReProgression {
     ^perc.at(this.asSymbol);
   }
 
-  chord {
-    |octave=5|
+  chord { |octave=5|
     var chords = (
       \one: [0],
       \maj: [0, 4, 7],
@@ -408,34 +404,39 @@ ReProgression {
 
 + Symbol {
 
-  midi {
-    |octave=5|
-    ^this.asString.midi(octave);
-  }
+  midi { |octave=5| ^this.asString.midi(octave); }
+  percussion { ^this.asString.percussion; }
+  chord { |octave=5| ^this.asString.chord(octave); }
 
-  percussion {
-    ^this.asString.percussion;
-  }
 
-  chord {
-    |octave=5|
-    ^this.asString.chord(octave);
+  asReNote {
+    var symbol = this, midinote = \rest;
+
+    if (symbol.percussion.notNil,
+      { midinote = symbol.percussion; },
+      {
+        if (symbol.chord.notNil,
+          { midinote = symbol.chord(0); },
+          {
+            if (symbol.midi.notNil,
+              { midinote = symbol.midi(0); },
+              {
+                if(symbol.asGMPerc.notNil)
+                { midinote = symbol.asGMPerc; }
+            });
+        });
+    });
+
+    ^midinote;
   }
 
 }
 
 + SequenceableCollection {
 
-  abc {
-    ^this.collect(_.abc);
-  }
-
-  percussion {
-    ^this.collect(_.percussion);
-  }
-
-  midi {
-    ^this.collect(_.percussion);
-  }
+  abc { ^this.collect(_.abc); }
+  percussion { ^this.collect(_.percussion); }
+  midi {  ^this.collect(_.percussion); }
+  chordsFor { |scale| ^this.collect{ |x| Scale.at(scale.asSymbol).chords(x) }.pop }
 
 }
