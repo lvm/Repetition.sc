@@ -78,6 +78,7 @@ Peach : Pattern {
   }
 }
 
+/*
 RePevent : Pattern {
 	var <>pattern, <>event;
 
@@ -96,17 +97,37 @@ RePevent : Pattern {
 		}
 	}
 }
+*/
+RePevent : Pattern {
+	var <>pattern, <>event;
+
+	*new { arg pattern, event;
+    ^super.newCopyArgs(pattern, event ?? { Event.default });
+	}
+  currentpairs { ^pattern; }
+	storeArgs { ^[pattern, event] }
+	embedInStream { arg inval;
+		var outval;
+		var stream = pattern.asStream;
+		loop {
+			outval = stream.nextRP(event);
+			if (outval.isNil) { ^inval };
+      inval = outval.yield
+		}
+	}
+}
 
 Prepetition {
   *new {
     ^Prout({ |evt|
       while { evt.notNil } {
 
-        // "defaults"
         evt[\stut] = evt.stut ?? 1;
         evt[\octave] = (evt.octave ?? 5) + evt.shift;
         evt[\amp] = (evt.amp ?? 0.125) + evt.accent;
-        evt[\midinote] = evt.midinote + (if (evt.typeof != \percussion, { 12 * evt.octave }, { 0 }));
+        if (evt.midinote.isRest.not) {
+          evt[\midinote] = evt.midinote + (if (evt.typeof != \percussion, { 12 * evt.octave }, { 0 }));
+        };
 
         // if both are defined, i'll discard them.
         if (evt.fast.notNil && evt.slow.isNil) { evt[\stretch] = 1/evt.fast; };
@@ -115,6 +136,16 @@ Prepetition {
         // i'm lazy and don't want to specify an Event type if i already defined a (midi) channel.
         if (evt.chan.notNil && evt.type.isNil) { evt[\type] = \md; };
 
+        evt = evt.yield;
+      }
+    }).stutter(Pkey(\stut));
+  }
+}
+
+Prepetition2 {
+  *new {
+    ^Prout({ |evt|
+      while { evt.notNil } {
         evt = evt.yield;
       }
     }).stutter(Pkey(\stut));

@@ -73,6 +73,10 @@
         }, {
           if(args.find([\seq, \shuf]).notNil, {
             pattern = rePattern.pshuf(inf);
+          }, {
+            if(args.find([\seq, \shufn]).notNil, {
+              pattern = rePattern.pshufn(inf);
+            })
           })
           ;
         })
@@ -86,6 +90,37 @@
     ;
   }
 
+  asRepetitionSingleSequence { |... args|
+    var ptype = \seq
+    ;
+    if(args.notNil) {
+      if(args.find([\seq, \rnd]).notNil,
+        { ptype = \rnd; },
+        { if(args.find([\seq, \xrnd]).notNil,
+          { ptype = \xrnd; },
+          { if(args.find([\seq, \shuf]).notNil,
+            { ptype = \shuf; })
+          ; })
+        ; })
+      ;
+    }
+    ;
+    ^this.parseRepetition.singleSequence
+    .collect{
+      |v, k|
+      v = v.asArray;
+      if (v.flat.uniq.size == 1) { v.pop; } {
+        switch(ptype,
+          \rnd, { v.prand },
+          \xrnd, { v.pxrand },
+          \shuf, { v.pshuf },
+          \seq, { v.pseq },
+        );
+      }
+    }
+    ;
+  }
+
   asRepetitionStream { |... args|
     ^this
     .asRepetitionSequence(*args)
@@ -93,8 +128,14 @@
     ;
   }
 
+  asRepetitionSingleStream { |... args|
+    ^this
+    .asRepetitionSingleSequence(*args)
+    ;
+  }
+
   classExists {
-    ^this.asSymbol.asClass.notNil;
+    ^this.asSymbol.classExists;
     // ^Class.allClasses.collect(_.asString).indexOfEqual(this).notNil;
   }
 
@@ -231,6 +272,7 @@
     .asRepetitionStream(*args)
     .player(*args);
   }
+
   <@> { |... args|
     ^this
     .asRepetitionStream(*args)
@@ -335,6 +377,10 @@
     ;
   }
 
+  classExists {
+    ^this.asClass.notNil;
+  }
+
 }
 
 + Event {
@@ -415,6 +461,26 @@
 
 + SequenceableCollection {
 
+  singleSequence { |... args|
+    var evt = ();
+    this
+    .collect {
+      |e,i|
+      e.keys.collect {
+        |key|
+        if (evt.keys.asList.indexOfEqual(key).isNil)
+        { evt[key] = List.new; };
+        evt[key].add(e.at(key));
+      }
+    }
+    ;
+    ^evt.collect{
+      |v, k|
+      v = v.asArray;
+      if (v.flat.uniq.size == 1) { v.pop; } { v; }
+    }
+  }
+
   uniq {
     var result = List.new;
     this.do{ |item|
@@ -426,32 +492,90 @@
   }
 
   pseq { |rep = inf, offs = 0| ^Pseq(this, rep, offs); }
-
   pshuf { |rep = inf| ^Pshuf(this, rep); }
-
+  pshufn { |rep = inf| if(\Pshufn.classExists, { ^Pshufn(this, rep) }, { this.pshuf(rep) }); }
   prand { |rep = inf| ^Prand(this, rep); }
-
   pxrand { |rep = inf| ^Pxrand(this, rep); }
-
   pwrand { |weights, rep = inf|
     weights = weights ?? [(1 / this.size) ! this.size].normalizeSum;
     ^Pwrand(this, weights, rep);
   }
-
   place { |rep = inf, offs = 0| ^Place(this, rep, offs); }
-
   // alias because String.shuffle
   shuffle { ^this.scramble; }
 }
 
 + Float {
+
   midirange {
     ^(127 * this).round;
   }
+
 }
 
 + Integer {
+
   rangemidi {
     ^(this/127).asStringPrec(2);
   }
+
+}
+
++ SimpleNumber {
+
+  // 12 TET
+  unison { ^this; }
+  minor2nd { ^this * 1.059; }
+  major2nd { ^this * 1.122; }
+  minor3rd { ^this * 1.189; }
+  major3rd { ^this * 1.259; }
+  fourth { ^this * 1.334; }
+  tritone { ^this * 1.414; }
+  fifth { ^this * 1.498; }
+  minor6th { ^this * 1.587; }
+  major6th { ^this * 1.681; }
+  minor7th { ^this * 1.781; }
+  major7th { ^this * 1.887; }
+  octaveUp { ^this * 2; }
+  octaveDown { ^this / 2; }
+
+}
+
+// EXPERIMENTAL SPOOKY STUFF
+
++ Symbol {
+
+  ndef { |aPbind|
+    var self = Ndef(this);
+    if (self.isNil) { self.proxyspace.quant = 4; };
+    ^if(aPbind.isNil, { self }, { self[0] = aPbind });
+  }
+  cc { |aPbind| Ndef(this)[65535] = \cc -> aPbind; }
+
+  pdef { |aPbind|
+    var self = Pdef(this);
+    if (self.isPlaying.not) { self.quant_(4).play; };
+    ^if(aPbind.isNil, { self }, { Pdef(this, aPbind) });
+  }
+  <+ { |aPbind| this.pdef(aPbind); }
+
+  clear { this.pdef.clear; }
+  >> { |meh| this.clear; }
+
+  /*
+  << { |aPbind|
+    if (Ndef(this).isNil) { Ndef(this).proxyspace.quant = 8; };
+    ^Ndef(this)[0] = aPbind
+    ;
+  }
+
+  <+ { |aPbind|
+    Ndef(this)[65535] = \cc -> aPbind;
+  }
+
+  >> { |meh|
+    if (Ndef(this).notNil) { Ndef(this).clear; }
+  }
+  */
+
 }

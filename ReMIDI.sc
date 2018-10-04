@@ -5,8 +5,7 @@ MIDI Stuff, part of the Repetition.sc project
 
 + Repetition {
 
-  cc {
-    |key|
+  cc { |key|
     var cc_n = (
       // named
       amp: 7,
@@ -152,45 +151,53 @@ MIDI Stuff, part of the Repetition.sc project
   }
 
   midiEventTypes {
-    Event.addEventType(\md, {
-      |server|
+    Event.addEventType(\md, { |server|
       ~type = \midi;
       ~midiout = outmidi;
-      ~chan = ~chan ?? 9;
-      ~amp = ~amp ?? 0.9;
+      ~octave = ~octave + ~shift;
+      ~stretch = ((~stretch ?? 1) / (~fast ?? 1)) * (~slow ?? 1);
+      ~amp = ~amp + ~accent;
       currentEnvironment.play;
     });
+    Event.addParentType(\md, (octave: 5, stut: 1, shift: 0, fast:1, slow: 1, chan: 9, amp: 0.9, accent: 0));
 
-    Event.addEventType(\cc, {
-      |server|
+    Event.addEventType(\hax, { |server|
+      ~type = \midi;
+      ~midiout = outmidi;
+      ~octave = ~octave + ~shift;
+      ~stretch = ((~stretch ?? 1) / ~fast) * ~slow;
+      ~amp = ~amp + ~accent;
+      // PchainPrepetition <>
+      Prepetition() <> Pbind(*currentEnvironment.getPairs).play;
+    });
+    Event.addParentType(\hax, (octave: 5, stut: 1, shift: 0, fast:1, slow: 1, chan: 9, amp: 0.9, accent: 0));
+
+    Event.addEventType(\cc, { |server|
       ~type = \midi;
       ~midicmd = \control;
       ~midiout = outmidicc;
-      ~chan = ~chan ?? 9;
-      // ~ctlNum = ~ctlNum ?? 23;
-      ~ctlNum = ~ctlNum ?? ~cc ?? 23;
-      ~control = ~control ?? ~value ?? 0;
+      ~ctlNum = ~ctlNum ?? ~cc;
+      ~control = ~control ?? ~value;
       currentEnvironment.play;
     });
+    Event.addParentType(\cc, (chan: 9, cc: 23, value: 0));
 
-    Event.addEventType(\panic, {
-      |server|
+    Event.addEventType(\panic, { |server|
       ~type = \midi;
       ~midicmd = \allNotesOff;
       ~midiout = outmidi;
-      ~chan = ~chan ?? 9;
       currentEnvironment.play;
     });
+    Event.addParentType(\cc, (chan: 9));
 
-    Event.addEventType(\prog, {
-      |server|
+/*    Event.addEventType(\prog, { |server|
       ~type = \midi;
       ~midicmd = \program;
       ~midiout = outmidi;
       ~chan = ~chan ?? 9;
       ~ctlNum = ~ctlNum ?? 10;
       currentEnvironment.play;
-    });
+    });*/
   }
 
   midiCustomRoles {
