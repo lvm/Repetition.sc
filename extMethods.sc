@@ -140,10 +140,15 @@
   }
 
   // requires `Bjorklund` Quark.
-  bjorklund { |k, n, rotate=0|
+  bjorklund { |k=3, n=8, rotate=0|
     var hit = Pseq(this.split($ ), inf).asStream;
+    if(k.isKindOf(SimpleNumber)) { k = [k]; };
+    if(n.isKindOf(SimpleNumber)) { n = [n]; };
+    if (n.size < k.size ) { n = n.dup(k.size).flat };
 
-    ^Bjorklund(k, n)
+    ^Pbjorklund(Pseq(k, inf), Pseq(n, inf), inf)
+    .asStream
+    .nextN(n.sum)
     .rotate(rotate)
     .collect { |p| if (p.asBoolean) { hit.next } { \r } }
     .join(" ")
@@ -237,7 +242,7 @@
   regularly { |callback| ^this.probability(0.75, callback); }
   always { |callback| ^this.probability(1.0, callback);  }
 
-	<< { |notes|
+	binbeat { |notes|
     var stream = Pseq(notes.split($ ), inf).asStream;
     ^this
     .replace("/ ", "")
@@ -247,6 +252,40 @@
     .join(" ")
     ;
   }
+  << { |notes| ^this.binbeat(notes); }
+  tribeat { |notes|
+    var stream = Pseq(notes.split($ ), inf).asStream;
+    ^this
+    .replace("/ ", "")
+    .asList
+    .reject{ |x| x.asString.stripWhiteSpace.isEmpty }
+    .collect { |p| if (p.asString == "2") { [0,1].choose.asString } { p } }
+    .collect { |p| if (p.asString == "1") { stream.next.asString } { "r" } }
+    .join(" ")
+    ;
+  }
+  <<< { |notes| ^this.tribeat(notes); }
+
+  lsys { |limit=100|
+    var start, each = ();
+    this
+    .split($|)
+    .collect{ |e|
+      var kv = e.split($:), dct;
+      dct = ((kv[0].asSymbol): (kv[1].asList.asArray.collect(_.asSymbol)));
+      each = each.merge(dct, {|a,b| b });
+    }
+    ;
+    start = each.keys().pop()
+    ;
+    ^Prewrite(start, each, each.keys.size())
+    .asStream
+    .nextN(limit)
+    .flat
+    .reject{ |x| x.asString.isEmpty }
+    ;
+  }
+
   invert {
     ^this
     .replace("/ ", "")
@@ -547,20 +586,21 @@
 
   ndef { |aPbind|
     var self = Ndef(this);
-    if (self.isNil) { self.proxyspace.quant = 4; };
+    if (self.isNil) { self.proxyspace.quant = 8; };
     ^if(aPbind.isNil, { self }, { self[0] = aPbind });
   }
   cc { |aPbind| Ndef(this)[65535] = \cc -> aPbind; }
 
   pdef { |aPbind|
     var self = Pdef(this);
-    if (self.isPlaying.not) { self.quant_(4).play; };
+    if (self.isPlaying.not) { self.quant_(8).play; };
     ^if(aPbind.isNil, { self }, { Pdef(this, aPbind) });
   }
   <+ { |aPbind| this.pdef(aPbind); }
 
   clear { this.pdef.clear; }
   >> { |meh| this.clear; }
+
 
   /*
   << { |aPbind|
