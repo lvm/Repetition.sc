@@ -154,6 +154,7 @@
     .join(" ")
     ;
   }
+  bj { |k=3,n=8,r=0| ^this.bjorklund(k, n, r) }
 
   maybeCleanUp {
     ^this
@@ -307,6 +308,11 @@
 
   // player short
   pbind { |... args|
+    ^this
+    .asRepetitionStream(*args)
+    .player(*args);
+  }
+  pb { |... args|
     ^this
     .asRepetitionStream(*args)
     .player(*args);
@@ -593,14 +599,18 @@
 
   pdef { |aPbind|
     var self = Pdef(this);
-    if (self.isPlaying.not) { self.quant_(8).play; };
-    ^if(aPbind.isNil, { self }, { Pdef(this, aPbind) });
+    ^if (aPbind.isNil, {
+      self.clear;
+    }, {
+      if (self.isPlaying.not) { self.quant_(8).play; };
+      if(aPbind.isNil, { self }, { Pdef(this, aPbind) });
+    });
   }
   <+ { |aPbind| this.pdef(aPbind); }
+  << { |aPbind| this.pdef(aPbind); }
 
   clear { this.pdef.clear; }
   >> { |meh| this.clear; }
-
 
   /*
   << { |aPbind|
