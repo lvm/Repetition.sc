@@ -402,6 +402,13 @@ ReProgression {
 
 }
 
++ String {
+
+  asReNote {
+    ^this.asSymbol.asReNote;
+  }
+}
+
 + Symbol {
 
   midi { |octave=5| ^this.asString.midi(octave); }

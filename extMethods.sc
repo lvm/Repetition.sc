@@ -1,47 +1,34 @@
 /*
-        extMethods.sc
-        External Methods that implement some of the behavior for Repetition.sc
+extMethods.sc
+External Methods that implement some of the behavior for Repetition.sc
 */
 
-+ Routine {
-
-  nextRP { |inval|
-    var value = this.value(inval), tmp;
-
-    // then we add the amplitude. if the `symbol` has `@`,  will sum `0.25`
-    value = value.applyAccent;
-    // if the `symbol` has `'`, will shift 1 octave up. if the 'symbol' has `,` will shift 1 octave down.
-    // also we need to inject the typeOf to calculate later the octave we're on.
-    value = value.applyOctave;
-    // for convenience, let's add the "type of" Event we'll play
-    // ie: percussion, chord, note
-    value = value.applyTypeOf;
-    // now that everything is it's right place, we'll clean the symbols to
-    // convert each Event to a proper MIDI note based on `typeOf` and the `symbol`.
-    value = value.applyReNote;
-
-    ^value;
-  }
-
-  player { |... args|
-    //^Pchain(Prepetition(), Pbind(\beat, Ptime(inf)), Pbind(*args), RePevent(this));
-    ^Pchain(Prepetition(), Pbind(*args), RePevent(this));
-  }
-
-}
-
-+ Object {
-
-  nextNRP { |n, inval|
-    ^Array.fill(n, { this.nextRP(inval) });
-  }
-
-}
-
 + String {
+  /*
+  parseRepetition {
+  var regexp = "\\[.*?\\]|\\{.*?\\}|[\\w\\.\\|\\/\\'\\,!?@?\\+?(\\*\d+)?]+";
+
+  ^this
+  .asString
+  .findRegexp(regexp)
+  .collect(_[1])
+  .collect(_.stripWhiteSpace)
+  .collect(_.replace("/", ""))
+  .collect(_.flat)
+  .collect(_.asSymbol)
+  .collect(_.maybeRepeat)
+  .collect(_.maybeSplit)
+  .reject{ |x| x.asString.stripWhiteSpace.size < 1 }
+  .flat
+  ;
+  }*/
 
   parseRepetition {
-    var regexp = "([\\w\\.\\|\\/\\'\\,!?@?\\+?(\\*\d+)? ]+)";
+    // var regexp = "\\[.*?\\]|\\{.*?\\}|\\(.*?\\)|\\w+";
+    var regexp = "\\[.*?\\]|\\{.*?\\}|\\(.*?\\)|[\\w+\\|?]+";
+
+    // var regexp = "\\[.*?\\]|\\{.*?\\}|\\(.*?\\)|[\\w\\|\\'\\,!?(\\*\d+)?]+";
+    // var regexp = "\\[.*?\\]|\\{.*?\\}|[\\w\\.\\|\\/\\'\\,!?@?\\+?(\\*\d+)?]+";
 
     ^this
     .asString
@@ -49,89 +36,25 @@
     .collect(_[1])
     .collect(_.stripWhiteSpace)
     .collect(_.replace("/", ""))
-    .uniq
     .collect(_.flat)
-    .collect(_.asSymbol)
-    .collect(_.maybeRepeat)
-    .collect(_.maybeSplit)
-    .collect(_.parseEvents)
-    .pop
-    .applyIndex
-    ;
-  }
-
-  asRepetitionSequence { |... args|
-    var rePattern = this.parseRepetition;
-    var pattern = rePattern.pseq(inf);
-
-    if(args.notNil) {
-      if(args.find([\seq, \rnd]).notNil, {
-        pattern = rePattern.prand(inf);
-      }, {
-        if(args.find([\seq, \xrnd]).notNil, {
-        pattern = rePattern.pxrand(inf);
-        }, {
-          if(args.find([\seq, \shuf]).notNil, {
-            pattern = rePattern.pshuf(inf);
-          }, {
-            if(args.find([\seq, \shufn]).notNil, {
-              pattern = rePattern.pshufn(inf);
-            })
-          })
-          ;
-        })
-        ;
-      })
-      ;
+    .collect{ |str|
+      var notes = str, typeof = \ind;
+      if (str.contains("|")) { notes = str.split($|); typeof = \grp };
+      if (str.contains("[")) { notes = str.replace("[","").replace("]","").split($ ); typeof = \seq };
+      if (str.contains("{")) { notes = str.replace("{","").replace("}","").split($ ); typeof = \xrnd };
+      if (str.contains("(")) { notes = str.replace("(","").replace(")","").split($ ); typeof = \grp };
+      (notes: notes, typeof: typeof);
     }
-    ;
-
-    ^pattern
-    ;
-  }
-
-  asRepetitionSingleSequence { |... args|
-    var ptype = \seq
-    ;
-    if(args.notNil) {
-      if(args.find([\seq, \rnd]).notNil,
-        { ptype = \rnd; },
-        { if(args.find([\seq, \xrnd]).notNil,
-          { ptype = \xrnd; },
-          { if(args.find([\seq, \shuf]).notNil,
-            { ptype = \shuf; })
-          ; })
-        ; })
-      ;
+    .collect{ |grp|
+      var notes = grp.at(\notes), typeof = grp.at(\typeof);
+      switch(typeof,
+        \seq, { notes.collect(_.asReNote).pseq(1); },
+        \xrnd, { notes.collect(_.asReNote).pxrand(1); },
+        \grp, { notes.collect(_.asReNote); },
+        \ind, { notes.asReNote; }
+      );
     }
-    ;
-    ^this.parseRepetition.singleSequence
-    .collect{
-      |v, k|
-      v = v.asArray;
-      if (v.flat.uniq.size == 1) { v.pop; } {
-        switch(ptype,
-          \rnd, { v.prand },
-          \xrnd, { v.pxrand },
-          \shuf, { v.pshuf },
-          \seq, { v.pseq },
-        );
-      }
-    }
-    ;
-  }
 
-  asRepetitionStream { |... args|
-    ^this
-    .asRepetitionSequence(*args)
-    .asStream
-    ;
-  }
-
-  asRepetitionSingleStream { |... args|
-    ^this
-    .asRepetitionSingleSequence(*args)
-    ;
   }
 
   classExists {
@@ -162,28 +85,6 @@
     .replace(",", "")
     .replace("'", "")
     ;
-  }
-
-  createSingleEvent { |dur=1|
-    var item = this;
-
-    if (item.contains("+")) {
-      item = item.split($+);
-      dur = (dur/item.size).dup(item.size);
-    } {
-      if (item.contains("|")) {
-        item = item.split($|);
-      }
-    };
-
-    if (dur.isKindOf(Array)) {
-      ^dur.collect {
-        |d, i|
-        (dur: d, symbol: item[i]);
-      }.flat;
-    } {
-      ^(dur: dur, symbol: item);
-    }
   }
 
   /*
@@ -243,7 +144,7 @@
   regularly { |callback| ^this.probability(0.75, callback); }
   always { |callback| ^this.probability(1.0, callback);  }
 
-	binbeat { |notes|
+  binbeat { |notes|
     var stream = Pseq(notes.split($ ), inf).asStream;
     ^this
     .replace("/ ", "")
@@ -254,6 +155,7 @@
     ;
   }
   << { |notes| ^this.binbeat(notes); }
+
   tribeat { |notes|
     var stream = Pseq(notes.split($ ), inf).asStream;
     ^this
@@ -308,29 +210,37 @@
 
   // player short
   pbind { |... args|
-    ^this
-    .asRepetitionStream(*args)
-    .player(*args);
-  }
-  pb { |... args|
-    ^this
-    .asRepetitionStream(*args)
-    .player(*args);
-  }
-
-  <@> { |... args|
-    ^this
-    .asRepetitionStream(*args)
-    .player(*args.at(0));
+    var midinote = this.parseRepetition
+    ,stut_idx = args.atIdentityHash(\stut)
+    ,oct_idx = args.atIdentityHash(\octave)
+    ,stut = if (stut_idx > -1, { args.at(stut_idx+1) }, { 1 })
+    ,oct = if (oct_idx > -1, { args.at(oct_idx+1) }, { 0 })
+    ;
+    midinote = if (args.atIdentityHash(\random) > -1, { midinote.pseq }, { midinote.pxrand });
+    ^(args ++ [\midinote, Pstutter(stut, midinote + (12 * oct)), \type, \md])
+    .playerProxy
+    ;
   }
 
-  <!> { |... args|
-    ^this.postln;
+  console { |... args|
+    this
+    .parseRepetition
+    .postln
+    ;
+    args
+    .postln
+    ;
+
+    ^nil
   }
 
 }
 
 + Symbol {
+
+  classExists {
+    ^this.asClass.notNil;
+  }
 
   maybeRepeat {
     var item = this.asString;
@@ -371,78 +281,24 @@
     ^item;
   }
 
-  whichTypeOf {
-    var symbol = this, midinote = \rest, typeof = \percussion; // fix me: what about Integers?
+  applyReNote {
+    var symbol = this.at(\symbol), midinote;
 
-    if (symbol.isRest,
-      { typeof = \rest; },
-      {
-        if (symbol.percussion.notNil,
-          { typeof = \percussion; },
-          {
-            if (symbol.chord.notNil,
-              { typeof = \chord; },
-              {
-                if (symbol.midi.notNil,
-                { typeof = \note; },
-                {
-                  if (symbol.asGMPerc.notNil)
-                    { typeof = \percussion; }
-                });
-            });
-        });
-      });
-
-    ^typeof;
-  }
-
-  parseEvents {
-    var acc, size, dur, time, octave;
-    var pattern = this.asString;
-    var events = [];
-
-    /*
-    Basic Steps:
-    1. remove unwanted stuff
-    2. measure the List size
-    3. calculate the duration
-    */
-    pattern = pattern.split($ ).reject { |x| x.asString.size < 1 };
-    size = pattern.size;
-    dur = 1/size;
-
-    // Then we can start building our `List of Events`:
-    ^pattern
-    // based on the `symbol`, we'll create the Events with each duration.
-    .collect(_.createSingleEvent(dur))
-    // since we don't need to calculate the individual duration anymore, the `LoE` needs to be flattened to be able to apply functions over each Event.
-    .flat
-    // and to be sure, we'll remove everything that's not an Event.
-    .reject(_.isKindOf(Event).not)
+    if (symbol.isKindOf(Array)) {
+      midinote = symbol.collect(_.maybeCleanUp).collect(_.asSymbol).collect(_.asReNote).uniq;
+    } {
+      midinote = symbol.maybeCleanUp.asSymbol.asReNote;
+    }
     ;
-  }
 
-  classExists {
-    ^this.asClass.notNil;
+    ^this
+    .merge((midinote: midinote), {|a,b| b })
+    ;
   }
 
 }
 
 + Event {
-
-  applyAccent { |gain=0.9|
-    var symbol = this.at(\symbol), accent = 0;
-
-    if (symbol.isKindOf(List) || symbol.isKindOf(Array)) {
-      if (symbol.reject{ |x| x.asString.contains("@").not }.size.asBoolean) { accent = 0.25 }
-    } {
-      if (symbol.asString.contains("@")) { accent = 0.25 }
-    };
-
-    ^this
-    .merge((accent: accent), {|a,b| b })
-    ;
-  }
 
   applyOctave {
     var symbol = this.at(\symbol), shift = 0;
@@ -458,23 +314,6 @@
 
     ^this
     .merge((shift: shift), {|a,b| b })
-    ;
-  }
-
-  applyTypeOf {
-    var symbol = this.at(\symbol), typeof;
-
-    if (symbol.isKindOf(Array)) {
-      // in this particular case, i'm only interested in obtaining just one typeof
-      // it might happen, but having a `chord|perc-note` doesn't make much sense.
-      typeof = symbol.collect(_.maybeCleanUp).collect(_.asSymbol).collect(_.whichTypeOf).uniq.reject{ |x| x == \rest }.pop;
-    } {
-      typeof = symbol.maybeCleanUp.asSymbol.whichTypeOf;
-    }
-    ;
-
-    ^this
-    .merge((typeof: typeof), {|a,b| b })
     ;
   }
 
@@ -496,6 +335,12 @@
 }
 
 + Array {
+
+  playerProxy {
+    // ^Pchain(Prepetition(), Pbind(*this));
+    ^PbindProxy(*this);
+  }
+
 
   applyIndex {
     ^this
@@ -606,25 +451,29 @@
       if(aPbind.isNil, { self }, { Pdef(this, aPbind) });
     });
   }
-  <+ { |aPbind| this.pdef(aPbind); }
-  << { |aPbind| this.pdef(aPbind); }
+  pbindef { |... args|
+    ([this] ++ args.at(0)).postln;
+    ^Pbindef(*([this] ++ args.at(0)));
+  }
+  <+ { |args| ^this.pbindef(args); }
+  << { |aPbind| ^this.pdef(aPbind); }
 
-  clear { this.pdef.clear; }
-  >> { |meh| this.clear; }
+  clear { ^this.pdef.clear; }
+  >> { |meh| ^this.clear; }
 
   /*
   << { |aPbind|
-    if (Ndef(this).isNil) { Ndef(this).proxyspace.quant = 8; };
-    ^Ndef(this)[0] = aPbind
-    ;
+  if (Ndef(this).isNil) { Ndef(this).proxyspace.quant = 8; };
+  ^Ndef(this)[0] = aPbind
+  ;
   }
 
   <+ { |aPbind|
-    Ndef(this)[65535] = \cc -> aPbind;
+  Ndef(this)[65535] = \cc -> aPbind;
   }
 
   >> { |meh|
-    if (Ndef(this).notNil) { Ndef(this).clear; }
+  if (Ndef(this).notNil) { Ndef(this).clear; }
   }
   */
 

@@ -123,11 +123,11 @@ Prepetition {
       while { evt.notNil } {
 
         evt[\stut] = evt.stut ?? 1;
-        evt[\octave] = (evt.octave ?? 5) + evt.shift;
-        evt[\amp] = (evt.amp ?? 0.125) + evt.accent;
-        if (evt.midinote.isRest.not) {
-          evt[\midinote] = evt.midinote + (if (evt.typeof != \percussion, { 12 * evt.octave }, { 0 }));
-        };
+        // evt[\octave] = (evt.octave ?? 5) + evt.shift;
+        // evt[\amp] = (evt.amp ?? 0.125) + evt.accent;
+        // if (evt.midinote.isRest.not) {
+        // evt[\midinote] = evt.midinote + (if (evt.typeof != \percussion, { 12 * evt.octave }, { 0 }));
+        // };
 
         // if both are defined, i'll discard them.
         if (evt.fast.notNil && evt.slow.isNil) { evt[\stretch] = 1/evt.fast; };
