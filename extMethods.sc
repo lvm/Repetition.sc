@@ -337,7 +337,7 @@ External Methods that implement some of the behavior for Repetition.sc
 + Array {
 
   playerProxy {
-    // ^Pchain(Prepetition(), Pbind(*this));
+    // ^Pchain(Prepetition(), PbindProxy(*this));
     ^PbindProxy(*this);
   }
 

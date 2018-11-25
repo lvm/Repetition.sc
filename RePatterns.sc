@@ -78,26 +78,6 @@ Peach : Pattern {
   }
 }
 
-/*
-RePevent : Pattern {
-	var <>pattern, <>event;
-
-	*new { arg pattern, event;
-    // ^super.newCopyArgs(pattern, event ?? { Event.default });
-    ^super.newCopyArgs(pattern, event ?? { (chan: 9, amp: 0.9, dur: 1/4) });
-	}
-	storeArgs { ^[pattern, event] }
-	embedInStream { arg inval;
-		var outval;
-		var stream = pattern.asStream;
-		loop {
-			outval = stream.nextRP(event);
-			if (outval.isNil) { ^inval };
-      inval = outval.yield
-		}
-	}
-}
-*/
 RePevent : Pattern {
 	var <>pattern, <>event;
 
@@ -142,13 +122,33 @@ Prepetition {
   }
 }
 
-Prepetition2 {
-  *new {
-    ^Prout({ |evt|
-      while { evt.notNil } {
-        evt = evt.yield;
-      }
-    }).stutter(Pkey(\stut));
+Pnote {
+  *new { |sequence, repeats=inf|
+    ^Pseq(sequence.parseRepetition, repeats);
+  }
+}
+
+Prnote {
+  *new { |sequence, repeats=inf|
+    ^Prand(sequence.parseRepetition, repeats);
+  }
+}
+
+Pxnote {
+  *new { |sequence, repeats=inf|
+    ^Pxrand(sequence.parseRepetition, repeats);
+  }
+}
+
+Psnote {
+  *new { |sequence, repeats=inf|
+    ^Pshuf(sequence.parseRepetition, repeats);
+  }
+}
+
+Plsys {
+  *new { |sequence, limit=100|
+    ^Pseq(sequence.lsys(limit), inf);
   }
 }
 
