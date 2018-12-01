@@ -62,23 +62,6 @@ External Methods that implement some of the behavior for Repetition.sc
     // ^Class.allClasses.collect(_.asString).indexOfEqual(this).notNil;
   }
 
-  // requires `Bjorklund` Quark.
-  bjorklund { |k=3, n=8, rotate=0|
-    var hit = Pseq(this.split($ ), inf).asStream;
-    if(k.isKindOf(SimpleNumber)) { k = [k]; };
-    if(n.isKindOf(SimpleNumber)) { n = [n]; };
-    if (n.size < k.size ) { n = n.dup(k.size).flat };
-
-    ^Pbjorklund(Pseq(k, inf), Pseq(n, inf), inf)
-    .asStream
-    .nextN(n.sum)
-    .rotate(rotate)
-    .collect { |p| if (p.asBoolean) { hit.next } { \r } }
-    .join(" ")
-    ;
-  }
-  bj { |k=3,n=8,r=0| ^this.bjorklund(k, n, r) }
-
   maybeCleanUp {
     ^this
     .replace("@", "")
@@ -351,25 +334,6 @@ External Methods that implement some of the behavior for Repetition.sc
 
 + SequenceableCollection {
 
-  singleSequence { |... args|
-    var evt = ();
-    this
-    .collect {
-      |e,i|
-      e.keys.collect {
-        |key|
-        if (evt.keys.asList.indexOfEqual(key).isNil)
-        { evt[key] = List.new; };
-        evt[key].add(e.at(key));
-      }
-    }
-    ;
-    ^evt.collect{
-      |v, k|
-      v = v.asArray;
-      if (v.flat.uniq.size == 1) { v.pop; } { v; }
-    }
-  }
 
   uniq {
     var result = List.new;
@@ -381,18 +345,6 @@ External Methods that implement some of the behavior for Repetition.sc
     ^result.asArray;
   }
 
-  pseq { |rep = inf, offs = 0| ^Pseq(this, rep, offs); }
-  pshuf { |rep = inf| ^Pshuf(this, rep); }
-  pshufn { |rep = inf| if(\Pshufn.classExists, { ^Pshufn(this, rep) }, { this.pshuf(rep) }); }
-  prand { |rep = inf| ^Prand(this, rep); }
-  pxrand { |rep = inf| ^Pxrand(this, rep); }
-  pwrand { |weights, rep = inf|
-    weights = weights ?? [(1 / this.size) ! this.size].normalizeSum;
-    ^Pwrand(this, weights, rep);
-  }
-  place { |rep = inf, offs = 0| ^Place(this, rep, offs); }
-  // alias because String.shuffle
-  shuffle { ^this.scramble; }
 }
 
 + Float {

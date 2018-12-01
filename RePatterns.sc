@@ -152,24 +152,33 @@ Plsys {
   }
 }
 
-Linda {
-  *new { |lsystem basepattern|
-    var lsys = lsystem.asStream;
-    var lindenmayer = Prout({ |evt|
-       while { evt.notNil } {
-        evt[\type] = \md;
-        evt[\amp] = evt[\amp] ?? 0.9;
-        evt[\stut] = evt[\stut] ?? 1;
-        evt[\plus] = evt[\plus] ?? 0;
-        evt[\midinote] = [lsys.next].asGMPerc.flat + evt[\plus];
-        evt = evt.yield;
-      }
-    }).stutter(Pkey(\stut));
-
-    ^Pchain(lindenmayer, basepattern);
-  }
+Pstruct : Pattern {
+	var <>pattern, <>k= 3, <>n= 8, <>length= inf, offset= 0;
+  *new { |pattern, k, n, length= inf, offset= 0|
+		^super.newCopyArgs(pattern, k, n, length, offset);
+	}
+	storeArgs {^[pattern, k, n, length, offset]}
+	embedInStream { |inval|
+    var pStr = pattern.asStream;
+		var kStr = k.asStream;
+		var nStr = n.asStream;
+		var pVal, kVal, nVal;
+		length.value(inval).do{
+			var outval, b;
+      kVal = kStr.next(inval);
+			nVal = nStr.next(inval);
+			if(kVal.notNil and:{nVal.notNil}, {
+				b = Pseq(Bjorklund(kVal, nVal), 1, offset).asStream;
+				while({outval = b.next; outval.notNil}, {
+          inval = (if (outval == 0) { \r } { pStr.next(inval) }).yield;
+        });
+			}, {
+				inval = nil.yield;
+			});
+		};
+		^inval;
+	}
 }
-
 
 + Pbind {
 

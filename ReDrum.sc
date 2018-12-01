@@ -2416,7 +2416,7 @@ ReDrum  {
         stretch: 2,
         pattern: (
           bd: [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0],
-          sn: { [1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0].shuffle }.value,
+          sn: [1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0],
           ch: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
           cp: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
         )
@@ -2904,11 +2904,11 @@ ReDrum  {
     );
   }
 
-  *names {
-    ^ryt.keys.asList.sort;
-  }
+  *names { ^ryt.keys.asList.sort; }
 
-  *get { |key|
+  *get { |key| ^ryt.at(key); }
+
+  *patterns { |key|
     var track = ryt.at(key);
     "%: has tempo % and % steps".format(key.asString, track.tempo, track.pattern.bd.size).postln;
 
@@ -2959,8 +2959,34 @@ ReDrum  {
   // backwards compatibility
   *oneliner { |key| ^ReDrum.flat(key); }
 
+  *sequenceable { |key|
+    var track = ryt.at(key),
+    parallel = Array.fill(track.pattern.bd.size, { List.new(track.pattern.keys.size) })
+    ;
+    "%: has tempo % and % steps".format(key.asString, track.tempo, track.pattern.bd.size).postln;
+
+    track
+    .pattern
+    .collect{ |pat, key|
+      pat
+      .collect{ |i, idx|
+        if (i.asBoolean) { parallel[idx].add(key.asSymbol) } { parallel[idx].add(\r) }
+      }
+      // .uniq
+    }
+    ;
+    ^parallel
+    .collect(_.uniq)
+    .collect{ |n|
+      if ( (n.asArray == [\r]).not, { n.reject{ |m| m == \r } }, { n })
+    }
+    .collect{ |n| if (n.size > 1) { n } { n[0] } }
+    // .join(" ")
+    ;
+  }
+
   *bindrum { |key, which|
-    var pattern = if (which.notNil, { ReDrum.get(key).at(which.asSymbol) }, { ReDrum.flat(key) });
+    var pattern = if (which.notNil, { ReDrum.patterns(key).at(which.asSymbol) }, { ReDrum.flat(key) });
     ^pattern.split($ ).collect{ |x| if (x == "r", { 0 }, { 1 }) };
   }
 }
@@ -2968,7 +2994,7 @@ ReDrum  {
 
 + Repetition {
 
-  redrum { |key| ^ReDrum.get(key); }
+  redrum { |key| ^ReDrum.patterns(key); }
   redrumE { |key| ^ReDrum.events(key); }
   redrumF { |key| ^ReDrum.flat(key); }
 
@@ -2979,13 +3005,14 @@ ReDrum  {
 
   redrum { |which|
     ^if (which.notNil, {
-      ReDrum.get(this).at(which.asSymbol);
+      ReDrum.patterns(this).at(which.asSymbol);
     }, {
       ReDrum.flat(this);
     })
     ;
   }
   bindrum { |which| ^ReDrum.bindrum(this, which); }
-  binbeat { |... args| ^"did you mean %.bindrum?".format(this) }
+  binbeat { |... args| ^"did you mean %.bindrum?".format(this); }
+  sequence { ^ReDrum.sequenceable(this); }
 
 }
