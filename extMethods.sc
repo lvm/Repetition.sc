@@ -334,7 +334,6 @@ External Methods that implement some of the behavior for Repetition.sc
 
 + SequenceableCollection {
 
-
   uniq {
     var result = List.new;
     this.do{ |item|
@@ -343,6 +342,24 @@ External Methods that implement some of the behavior for Repetition.sc
       }
     };
     ^result.asArray;
+  }
+
+  pstruct { |k=3, n=8, len=inf, offs=0| ^Pstruct(this.pseq, k, n, len, offs); }
+  pseq { |rep = inf, offs = 0| ^Pseq(this, rep, offs); }
+  pshuf { |rep = inf| ^Pshuf(this, rep); }
+  pshufn { |rep = inf| if(\Pshufn.classExists, { ^Pshufn(this, rep) }, { this.pshuf(rep) }); }
+  prand { |rep = inf| ^Prand(this, rep); }
+  pxrand { |rep = inf| ^Pxrand(this, rep); }
+  pwrand { |weights, rep = inf|
+    weights = weights ?? [(1 / this.size) ! this.size].normalizeSum;
+    ^Pwrand(this, weights, rep);
+  }
+  place { |rep = inf, offs = 0| ^Place(this, rep, offs); }
+  // alias because String.shuffle
+  shuffle { ^this.scramble; }
+
+  asReNote {
+    ^this.collect(_.asReNote);
   }
 
 }
