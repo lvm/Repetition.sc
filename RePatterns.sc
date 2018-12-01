@@ -170,6 +170,33 @@ Linda {
   }
 }
 
+Pstruct : Pattern {
+	var <>pattern, <>k= 3, <>n= 8, <>length= inf, offset= 0;
+  *new { |pattern, k, n, length= inf, offset= 0|
+		^super.newCopyArgs(pattern, k, n, length, offset);
+	}
+	storeArgs {^[pattern, k, n, length, offset]}
+	embedInStream { |inval|
+    var pStr = pattern.asStream;
+		var kStr = k.asStream;
+		var nStr = n.asStream;
+		var pVal, kVal, nVal;
+		length.value(inval).do{
+			var outval, b;
+      kVal = kStr.next(inval);
+			nVal = nStr.next(inval);
+			if(kVal.notNil and:{nVal.notNil}, {
+				b = Pseq(Bjorklund(kVal, nVal), 1, offset).asStream;
+				while({outval = b.next; outval.notNil}, {
+          inval = (if (outval == 0) { \r } { pStr.next(inval) }).yield;
+        });
+			}, {
+				inval = nil.yield;
+			});
+		};
+		^inval;
+	}
+}
 
 + Pbind {
 
