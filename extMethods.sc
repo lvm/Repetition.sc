@@ -344,7 +344,7 @@ External Methods that implement some of the behavior for Repetition.sc
     ^result.asArray;
   }
 
-  pstruct { |k=3, n=8, len=inf, offs=0| ^Pstruct(this.pseq, k, n, len, offs); }
+  pstruct { |k=3, n=8, offs=0, len=inf| ^Pstruct(this.pseq, k, n, offs, len); }
   pseq { |rep = inf, offs = 0| ^Pseq(this, rep, offs); }
   pshuf { |rep = inf| ^Pshuf(this, rep); }
   pshufn { |rep = inf| if(\Pshufn.classExists, { ^Pshufn(this, rep) }, { this.pshuf(rep) }); }

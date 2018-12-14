@@ -153,22 +153,24 @@ Plsys {
 }
 
 Pstruct : Pattern {
-	var <>pattern, <>k= 3, <>n= 8, <>length= inf, offset= 0;
-  *new { |pattern, k, n, length= inf, offset= 0|
-		^super.newCopyArgs(pattern, k, n, length, offset);
+	var <>pattern, <>k= 3, <>n= 8, offset= 0, <>length= inf;
+  *new { |pattern, k, n, offset= 0, length= inf|
+		^super.newCopyArgs(pattern, k, n, offset, length);
 	}
-	storeArgs {^[pattern, k, n, length, offset]}
+	storeArgs {^[pattern, k, n, offset, length]}
 	embedInStream { |inval|
     var pStr = pattern.asStream;
 		var kStr = k.asStream;
 		var nStr = n.asStream;
-		var pVal, kVal, nVal;
+    var oStr = offset.asStream;
+		var pVal, kVal, nVal, oVal;
 		length.value(inval).do{
 			var outval, b;
       kVal = kStr.next(inval);
 			nVal = nStr.next(inval);
+			oVal = oStr.next(inval);
 			if(kVal.notNil and:{nVal.notNil}, {
-				b = Pseq(Bjorklund(kVal, nVal), 1, offset).asStream;
+				b = Pseq(Bjorklund(kVal, nVal), 1, oVal).asStream;
 				while({outval = b.next; outval.notNil}, {
           inval = (if (outval == 0) { \r } { pStr.next(inval) }).yield;
         });
